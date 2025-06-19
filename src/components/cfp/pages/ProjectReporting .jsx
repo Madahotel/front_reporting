@@ -44,24 +44,20 @@ const ProjectReporting = () => {
             if (response.data.status === 200) {
                 setModuleDetails(response.data.module || {});
                 
-                // --- CORRECTION HERE ---
-                // The backend already groups by year and provides an array of such groups.
-                // We need to transform this into the { year: [projects] } structure expected by rendering.
                 const backendGroupedProjects = Array.isArray(response.data.projects) ? response.data.projects : [];
                 
                 const transformedProjects = {};
                 backendGroupedProjects.forEach(yearlyGroup => {
                     if (yearlyGroup.year && Array.isArray(yearlyGroup.modules)) {
-                        // Map backend names to frontend expected names
                         transformedProjects[yearlyGroup.year] = yearlyGroup.modules.map(proj => ({
                             idProjet: proj.idProjet,
-                            client: proj.etp_name, // Map etp_name to client
-                            type_projet: proj.project_type, // Map project_type to type_projet
-                            date_debut: proj.dateDebut, // Map dateDebut to date_debut
-                            date_fin: proj.dateFin, // Map dateFin to date_fin
-                            prix: proj.total_ttc, // Map total_ttc to prix
-                            status: proj.project_status, // Map project_status to status
-                            lieu: proj.ville // Map ville to lieu
+                            client: proj.etp_name, 
+                            type_projet: proj.project_type, 
+                            date_debut: proj.dateDebut, 
+                            date_fin: proj.dateFin, 
+                            prix: proj.total_ttc, 
+                            status: proj.project_status, 
+                            lieu: proj.ville 
                         }));
                     }
                 });

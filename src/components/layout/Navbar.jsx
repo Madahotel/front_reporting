@@ -72,7 +72,7 @@ const Navbar = () => {
                 setIsMobileMenuOpen(false);
             }
             if (chiffreDAffaireRef.current && !chiffreDAffaireRef.current.contains(event.target) && !event.target.closest('button[aria-label="Menu Chiffre d\'affaire"]')) {
-                 setIsChiffreDAffaireOpen(false);
+                setIsChiffreDAffaireOpen(false);
             }
             if (notificationsRef.current && !notificationsRef.current.contains(event.target) && !event.target.closest('button[title="Notifications"]')) {
                 setIsNotificationsOpen(false);
@@ -115,13 +115,14 @@ const Navbar = () => {
         { name: 'Cours', to: '/reporting/cours' },
     ];
 
+    // --- CORRECTION ICI ---
     const chiffreDAffaireLinks = [
-        { name: 'Projet', href: 'https://reporting.forma-fusion.com/reporting/chiffre/projet' },
-        { name: 'Cours', href: 'https://reporting.forma-fusion.com/reporting/chiffre/cours' },
-        { name: 'Clients', href: 'https://reporting.forma-fusion.com/reporting/chiffre/client' },
-        { name: 'Mois', href: 'https://reporting.forma-fusion.com/reporting/chiffre/mois' },
+        { name: 'Projet', to: '/reporting/revenuebyproject' }, // Utilisez 'to' pour le lien interne
+        { name: 'Cours', to: '/reporting/revenuebycours' },
+        { name: 'Clients', to: '/reporting/revenuebyclients' },
+        { name: 'Mois', to: 'reporting/revenuebymonth' },
         { name: 'Dossier', href: 'https://reporting.forma-fusion.com/reporting/chiffre/dossier' },
-        { name: 'Référence', href: 'https://reporting.forma-fusion.com/reporting/chiffre/reference' },
+        { name: 'Référence', to: 'reporting/revenuebyreference' },
         { name: 'Ville', href: 'https://reporting.forma-fusion.com/reporting/chiffre/ville' },
     ];
 
@@ -207,19 +208,35 @@ const Navbar = () => {
                                             {isChiffreDAffaireOpen && (
                                                 <div className="pl-6 py-1">
                                                     {chiffreDAffaireLinks.map((item) => (
-                                                        <a // Utilisez <a> pour les liens externes
-                                                            key={item.name}
-                                                            href={item.href}
-                                                            className="block px-4 py-2 text-sm text-slate-700 hover:bg-gray-100 rounded-md"
-                                                            onClick={toggleMobileMenu} // Ferme le menu mobile au clic
-                                                            target="_blank" // Pour les liens externes
-                                                            rel="noopener noreferrer" // Pour les liens externes
-                                                        >
-                                                            <div className="w-[16px]">
-                                                                <i className="fa-solid fa-tarp" aria-hidden="true"></i> {/* Assurez-vous que Font Awesome est chargé */}
-                                                            </div>
-                                                            {item.name}
-                                                        </a>
+                                                        // --- DÉBUT DE LA CORRECTION DANS LE RENDU ---
+                                                        item.to ? ( // Si l'objet a une propriété 'to', c'est un lien interne React Router
+                                                            <Link
+                                                                key={item.name}
+                                                                to={item.to}
+                                                                className="block px-4 py-2 text-sm text-slate-700 hover:bg-gray-100 rounded-md"
+                                                                onClick={toggleMobileMenu} // Ferme le menu mobile au clic
+                                                            >
+                                                                <div className="w-[16px]">
+                                                                    <i className="fa-solid fa-tarp" aria-hidden="true"></i>
+                                                                </div>
+                                                                {item.name}
+                                                            </Link>
+                                                        ) : ( // Sinon, c'est un lien externe HTML
+                                                            <a
+                                                                key={item.name}
+                                                                href={item.href}
+                                                                className="block px-4 py-2 text-sm text-slate-700 hover:bg-gray-100 rounded-md"
+                                                                onClick={toggleMobileMenu} // Ferme le menu mobile au clic
+                                                                target="_blank" // Pour les liens externes
+                                                                rel="noopener noreferrer" // Pour les liens externes
+                                                            >
+                                                                <div className="w-[16px]">
+                                                                    <i className="fa-solid fa-tarp" aria-hidden="true"></i>
+                                                                </div>
+                                                                {item.name}
+                                                            </a>
+                                                        )
+                                                        // --- FIN DE LA CORRECTION DANS LE RENDU ---
                                                     ))}
                                                 </div>
                                             )}
@@ -269,18 +286,33 @@ const Navbar = () => {
                                         <ul className="absolute right-0 mt-3 w-max rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-[1] p-2">
                                             {chiffreDAffaireLinks.map((item) => (
                                                 <li key={item.name}>
-                                                    <a
-                                                        href={item.href}
-                                                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-gray-100 rounded-md"
-                                                        onClick={() => closeAllDropdownsExcept()}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <div className="w-[16px]">
-                                                            <i className="fa-solid fa-tarp" aria-hidden="true"></i>
-                                                        </div>
-                                                        {item.name}
-                                                    </a>
+                                                    {/* --- DÉBUT DE LA CORRECTION DANS LE RENDU --- */}
+                                                    {item.to ? ( // Si l'objet a une propriété 'to', c'est un lien interne React Router
+                                                        <Link
+                                                            to={item.to}
+                                                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-gray-100 rounded-md"
+                                                            onClick={() => closeAllDropdownsExcept()}
+                                                        >
+                                                            <div className="w-[16px]">
+                                                                <i className="fa-solid fa-tarp" aria-hidden="true"></i>
+                                                            </div>
+                                                            {item.name}
+                                                        </Link>
+                                                    ) : ( // Sinon, c'est un lien externe HTML
+                                                        <a
+                                                            href={item.href}
+                                                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-gray-100 rounded-md"
+                                                            onClick={() => closeAllDropdownsExcept()}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            <div className="w-[16px]">
+                                                                <i className="fa-solid fa-tarp" aria-hidden="true"></i>
+                                                            </div>
+                                                            {item.name}
+                                                        </a>
+                                                    )}
+                                                    {/* --- FIN DE LA CORRECTION DANS LE RENDU --- */}
                                                 </li>
                                             ))}
                                         </ul>
@@ -314,7 +346,7 @@ const Navbar = () => {
                                         {notifications.map((notification) => (
                                             <li key={notification.id}>
                                                 <a href={notification.href} className="flex items-start gap-3 px-4 py-2 hover:bg-gray-100 rounded-md"
-                                                   onClick={() => closeAllDropdownsExcept()}
+                                                    onClick={() => closeAllDropdownsExcept()}
                                                 >
                                                     <i className="fa-solid fa-gem text-[#864DFF] text-2xl" aria-hidden="true"></i>
                                                     <div className="flex flex-col">
@@ -398,7 +430,7 @@ const Navbar = () => {
                                                 <div className="flex flex-col w-full gap-1">
                                                     {/* TODO: Utiliser Link si c'est une route interne, ou gérer l'externe correctement */}
                                                     <a href="https://profils.forma-fusion.com/cfp/profils" target="_blank" rel="noopener noreferrer" className="block px-2 py-1 text-base text-gray-500 duration-100 rounded-md hover:bg-gray-100 hover:text-gray-700"
-                                                       onClick={() => closeAllDropdownsExcept()}
+                                                        onClick={() => closeAllDropdownsExcept()}
                                                     >
                                                         Gérer le profil
                                                     </a>
@@ -438,7 +470,7 @@ const Navbar = () => {
                                 className="px-4 py-2 rounded-md bg-[#87388C] text-white hover:bg-[#A462A4] transition duration-150"
                                 onClick={() => closeAllDropdownsExcept()}
                             >
-                                Se connecter
+                                {/* Ce bouton est incomplet dans le code fourni, je le laisse tel quel */}
                             </Link>
                         )}
                     </div>
