@@ -19,6 +19,8 @@ import RevenueByCourse from "./components/cfp/pages/RevenueByCourse";
 import RevenueByClient from "./components/cfp/pages/RevenueByClient";
 import RevenueByMonth from "./components/cfp/pages/RevenueByMonth";
 import RevenueByReference from "./components/cfp/pages/RevenueByReference";
+import RevenueByFolder from "./components/cfp/pages/RevenueByFolder";
+import RevenueByCity from "./components/cfp/pages/RevenueByCity";
 
 const App = () => {
   return (
@@ -41,6 +43,8 @@ const App = () => {
               <Route path="/reporting/revenuebyclients" element={<RevenueByClient />} />
               <Route path="/reporting/revenuebymonth" element={<RevenueByMonth />} />
               <Route path="/reporting/revenuebyreference" element={<RevenueByReference />} />
+              <Route path="/reporting/revenuebyfolder" element={<RevenueByFolder />} />
+              <Route path="/reporting/revenuebycity" element={<RevenueByCity />} />
             </Routes>
           </Router>
         </UserProvider>

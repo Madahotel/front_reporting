@@ -264,7 +264,7 @@ const RevenueByCourse = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="w-full h-full">
+      <div className="flex flex-col w-full max-w-screen-2xl px-4 md:px-8 mx-auto min-h-screen">
         <div className="w-full h-full">
           <div className="h-[calc(100%-100px)] overflow-auto">
             <motion.div

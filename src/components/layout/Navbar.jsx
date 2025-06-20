@@ -121,9 +121,9 @@ const Navbar = () => {
         { name: 'Cours', to: '/reporting/revenuebycours' },
         { name: 'Clients', to: '/reporting/revenuebyclients' },
         { name: 'Mois', to: 'reporting/revenuebymonth' },
-        { name: 'Dossier', href: 'https://reporting.forma-fusion.com/reporting/chiffre/dossier' },
+        { name: 'Dossier', to: 'reporting/revenuebyfolder' },
         { name: 'Référence', to: 'reporting/revenuebyreference' },
-        { name: 'Ville', href: 'https://reporting.forma-fusion.com/reporting/chiffre/ville' },
+        { name: 'Ville', to: 'reporting/revenuebycity' },
     ];
 
     const appLinks = [

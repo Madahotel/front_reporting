@@ -130,23 +130,23 @@ const RevenueByProject = () => {
 
   return (
     <motion.div
-      className="flex flex-col w-full h-full p-4 md:p-20"
+      className="flex flex-col w-full h-full p-4 md:p-20 "
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="flex flex-col w-full max-w-10xl mx-auto">
+      <div className="flex flex-col w-full max-w-screen-2xl px-4 md:px-8 mx-auto min-h-screen">
         <motion.div className="bg-white rounded-lg shadow-xl p-6 mb-8" variants={itemVariants}>
           <div className="flex flex-col md:flex-row justify-between items-center mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
               Chiffre d'affaires par projet
             </h1>
             <div className="flex items-center space-x-2">
-              <label htmlFor="yearSelect" className="text-md font-medium text-gray-700">Année:</label>
+              <label htmlFor="yearSelect" className="text-md font-medium text-gray-700 mx-auto">Année:</label>
               <select
                 id="yearSelect"
                 name="yearSelect"
-                className="w-32 px-3 py-2 text-base font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md appearance-none cursor-pointer focus:border-blue-500 focus:ring-blue-500 focus:outline-none transition duration-200"
+                className="mx-auto w-32 px-3 py-2 text-base font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md appearance-none cursor-pointer focus:border-blue-500 focus:ring-blue-500 focus:outline-none transition duration-200"
                 value={selectedYear}
                 onChange={handleYearChange}
               >

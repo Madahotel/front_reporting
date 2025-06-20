@@ -4,18 +4,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDown,
   faEye,
-  faSort, // Utiliser une icône de tri générique
+  faSort,
 } from "@fortawesome/free-solid-svg-icons";
 import { motion, AnimatePresence } from "framer-motion";
 
 const RevenueByClient = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  // Change activeClientId to an array to store multiple expanded client IDs
   const [activeClientIds, setActiveClientIds] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [data, setData] = useState({
-    customers: [], // Renommé de 'modules' à 'customers'
+    customers: [],
     total_price: 0,
     totalProjects: 0,
   });
@@ -24,7 +23,6 @@ const RevenueByClient = () => {
 
   const years = useMemo(() => {
     const yearsArray = [];
-    // Affiche l'année actuelle, l'année précédente et l'année suivante
     for (let i = -1; i <= 1; i++) {
       yearsArray.push(currentYear + i);
     }
@@ -53,7 +51,7 @@ const RevenueByClient = () => {
           start: project.date_debut,
           end: project.date_fin,
           detail: `https://reporting.forma-fusion.com/cfp/projets/detail/${project.id_projet}`,
-          percentage: parseFloat(project.percentage), // <-- ADDED THIS LINE
+          percentage: parseFloat(project.percentage),
         })),
       }));
 
@@ -72,13 +70,11 @@ const RevenueByClient = () => {
     }
   };
 
-  // This function now adds/removes client IDs from the activeClientIds array
   const toggleClientDetails = (clientId) => {
-    setActiveClientIds(
-      (prevIds) =>
-        prevIds.includes(clientId)
-          ? prevIds.filter((id) => id !== clientId) // Remove if already present
-          : [...prevIds, clientId] // Add if not present
+    setActiveClientIds((prevIds) =>
+      prevIds.includes(clientId)
+        ? prevIds.filter((id) => id !== clientId)
+        : [...prevIds, clientId]
     );
   };
 
@@ -94,14 +90,12 @@ const RevenueByClient = () => {
     setSortConfig({ key, direction });
   };
 
-  // Tri des clients (précédemment modules)
   const sortedCustomers = useMemo(() => {
     let sortableCustomers = [...data.customers];
     if (sortConfig.key) {
       sortableCustomers.sort((a, b) => {
         let aValue, bValue;
 
-        // Custom sort for project count
         if (sortConfig.key === "projects.length") {
           aValue = a.projects?.length || 0;
           bValue = b.projects?.length || 0;
@@ -139,7 +133,6 @@ const RevenueByClient = () => {
       .replace(",", " ");
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -181,7 +174,6 @@ const RevenueByClient = () => {
     },
   };
 
-  // Alternating colors for sub-tables
   const subTableColors = [
     "bg-blue-50",
     "bg-indigo-50",
@@ -266,7 +258,7 @@ const RevenueByClient = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="w-full h-full">
+      <div className="flex flex-col w-full max-w-screen-2xl px-4 md:px-8 mx-auto min-h-screen">
         <div className="w-full h-full">
           <div className="h-[calc(100%-100px)] overflow-auto">
             <motion.div
@@ -368,7 +360,8 @@ const RevenueByClient = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sortedCustomers.map((customer, index) => (
-                      <React.Fragment key={customer.id}>
+                      <React.Fragment key={customer.idCustomer}>
+
                         <motion.tr
                           variants={itemVariants}
                           className={`transition-colors duration-200 ${
@@ -446,7 +439,6 @@ const RevenueByClient = () => {
                                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                             Référence Projet
                                           </th>
-
                                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                             Début - Fin
                                           </th>
@@ -468,7 +460,7 @@ const RevenueByClient = () => {
                                               key={
                                                 project.id_projet ||
                                                 `${customer.id}-${projectIndex}`
-                                              } // Fallback key
+                                              }
                                               initial={{ opacity: 0, y: 10 }}
                                               animate={{ opacity: 1, y: 0 }}
                                               transition={{
@@ -485,7 +477,6 @@ const RevenueByClient = () => {
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                                 {project.projectReference}
                                               </td>
-
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-left">
                                                 {project.dateDebut} -{" "}
                                                 {project.dateFin}

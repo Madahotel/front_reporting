@@ -266,7 +266,7 @@ const RevenueByMonth = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="w-full h-full">
+      <div className="flex flex-col w-full max-w-screen-2xl px-4 md:px-8 mx-auto min-h-screen">
         <div className="w-full h-full">
           <div className="h-[calc(100%-100px)] overflow-auto">
             <motion.div
@@ -569,7 +569,7 @@ const RevenueByMonth = () => {
                     className="w-12 h-12 text-gray-400 mb-4"
                   />
                   <p className="text-lg text-gray-600">
-                    Aucun client trouvé pour l'année sélectionnée
+                    Aucun Mois trouvé pour l'année sélectionnée
                   </p>
                 </motion.div>
               )}

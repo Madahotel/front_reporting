@@ -8,14 +8,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { motion, AnimatePresence } from "framer-motion";
 
-const RevenueByReference = () => {
+const RevenueByFolder = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   // Change activeClientId to an array to store multiple expanded client IDs
-  const [activeReferenceIds, setActiveReferenceIds] = useState([]);
+  const [activeFolderIds, setActiveFolderIds] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [data, setData] = useState({
-    reference: [], // Renommé de 'modules' à 'months'
+    folders: [], // Renommé de 'modules' à 'months'
     total_price: 0,
     totalProjects: 0,
   });
@@ -38,18 +38,16 @@ const RevenueByReference = () => {
   const fetchData = async (year) => {
     setLoading(true);
     setError(null);
-    setActiveReferenceIds([]);
+    setActiveFolderIds([]);
     try {
-      const response = await api.get(
-        `/cfp/reporting/chiffre/reference/${year}`
-      );
+      const response = await api.get(`/cfp/reporting/chiffre/dossier/${year}`);
       const backendData = response.data;
 
-      const formattedReferences = backendData.references.map((reference) => ({
-        ...reference,
-        id: reference.id,
-        percentage: parseFloat(reference.percentage),
-        projects: reference.projects.map((project) => ({
+      const formattedFolders = backendData.folders.map((folder) => ({
+        ...folder,
+        id: folder.id,
+        percentage: parseFloat(folder.percentage),
+        projects: folder.projects.map((project) => ({
           ...project,
           cost: parseFloat(project.total_ttc),
           start: project.dateDebut,
@@ -60,7 +58,7 @@ const RevenueByReference = () => {
       }));
 
       setData({
-        references: formattedReferences,
+        folders: formattedFolders,
         total_price: backendData.total_price,
         totalProjects: backendData.totalProjects,
       });
@@ -75,12 +73,12 @@ const RevenueByReference = () => {
   };
 
   // This function now adds/removes client IDs from the activeClientIds array
-  const toggleReferenceDetails = (referenceId) => {
-    setActiveReferenceIds(
+  const toggleFoldersDetails = (folderId) => {
+    setActiveFolderIds(
       (prevIds) =>
-        prevIds.includes(referenceId)
-          ? prevIds.filter((id) => id !== referenceId) // Remove if already present
-          : [...prevIds, referenceId] // Add if not present
+        prevIds.includes(folderId)
+          ? prevIds.filter((id) => id !== folderId) // Remove if already present
+          : [...prevIds, folderId] // Add if not present
     );
   };
 
@@ -97,14 +95,14 @@ const RevenueByReference = () => {
   };
 
   // Tri des clients (précédemment modules)
-  const sortedReferences = useMemo(() => {
-    let sortableReferences = [...(data?.references || [])]; // sécurisé
+  const sortedFolders = useMemo(() => {
+    let sortableFolders = [...(data?.folders || [])]; // sécurisé
     if (sortConfig.key) {
-      sortableReferences.sort((a, b) => {
+      sortableFolders.sort((a, b) => {
         let aValue, bValue;
 
         // Custom sort for project count
-        if (sortConfig.key === "references.length") {
+        if (sortConfig.key === "folders.length") {
           aValue = a.projects?.length || 0;
           bValue = b.projects?.length || 0;
         } else {
@@ -126,8 +124,8 @@ const RevenueByReference = () => {
         return 0;
       });
     }
-    return sortableReferences;
-  }, [data.references, sortConfig]);
+    return sortableFolders;
+  }, [data.folders, sortConfig]);
 
   const formatCurrency = (value) => {
     const number = parseFloat(value);
@@ -284,7 +282,7 @@ const RevenueByReference = () => {
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  Chiffre d'affaires par Référence
+                  Chiffre d'affaires par Mois
                 </motion.h1>
                 <motion.div
                   className="flex items-center space-x-2"
@@ -296,7 +294,7 @@ const RevenueByReference = () => {
                     htmlFor="yearSelect"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Année :
+                    Année:
                   </label>
                   <select
                     id="yearSelect"
@@ -333,7 +331,7 @@ const RevenueByReference = () => {
                             icon={faSort}
                             className="mr-1 text-gray-400"
                           />
-                          <span>Référence</span>
+                          <span>Dossier</span>
                         </div>
                       </th>
                       <th
@@ -345,7 +343,7 @@ const RevenueByReference = () => {
                             icon={faSort}
                             className="mr-1 text-gray-400"
                           />
-                          <span>Nombre de projets</span>
+                          <span>Nombre de projet</span>
                         </div>
                       </th>
                       <th
@@ -369,12 +367,12 @@ const RevenueByReference = () => {
                     </motion.tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {sortedReferences.map((reference, index) => (
-                      <React.Fragment key={`${reference.id}-${index}`}>
+                    {sortedFolders.map((folder, index) => (
+                      <React.Fragment key={`${folder.id}-${index}`}>
                         <motion.tr
                           variants={itemVariants}
                           className={`transition-colors duration-200 ${
-                            activeReferenceIds.includes(reference.id)
+                            activeFolderIds.includes(folder.id)
                               ? "bg-blue-100"
                               : "hover:bg-gray-50"
                           }`}
@@ -383,24 +381,24 @@ const RevenueByReference = () => {
                             {index + 1}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {reference.name}
+                            {folder.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            {reference.count_project || 0}
+                            {folder.count_project || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatCurrency(reference.total_ttc)}
+                            {formatCurrency(folder.total_ttc)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                            {reference.percentage?.toFixed(2) || "0.00"} %
+                            {folder.percentage?.toFixed(2) || "0.00"} %
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             <motion.button
-                              id={`toggleButton-${reference.id}`}
+                              id={`toggleButton-${folder.id}`}
                               className="p-1 text-gray-500 hover:text-blue-600 transition-colors duration-200"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleReferenceDetails(reference.id);
+                                toggleFoldersDetails(folder.id);
                               }}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
@@ -408,7 +406,7 @@ const RevenueByReference = () => {
                               <FontAwesomeIcon
                                 icon={faArrowDown}
                                 className={`transition-transform duration-300 ${
-                                  activeReferenceIds.includes(reference.id)
+                                  activeFolderIds.includes(folder.id)
                                     ? "rotate-180 text-blue-600"
                                     : ""
                                 }`}
@@ -418,7 +416,7 @@ const RevenueByReference = () => {
                         </motion.tr>
 
                         <AnimatePresence>
-                          {activeReferenceIds.includes(reference.id) && (
+                          {activeFolderIds.includes(folder.id) && (
                             <motion.tr
                               variants={expandVariants}
                               initial="hidden"
@@ -467,13 +465,13 @@ const RevenueByReference = () => {
                                         </tr>
                                       </thead>
                                       <tbody className="divide-y divide-gray-300">
-                                        {reference.projects?.map(
+                                        {folder.projects?.map(
                                           (project, projectIndex) => (
                                             <motion.tr
                                               key={
                                                 project.id_projet ||
-                                                `${reference.id}-${projectIndex}`
-                                              }
+                                                `${folder.id}-${projectIndex}`
+                                              } // Fallback key
                                               initial={{ opacity: 0, y: 10 }}
                                               animate={{ opacity: 1, y: 0 }}
                                               transition={{
@@ -560,7 +558,7 @@ const RevenueByReference = () => {
                 </table>
               </motion.div>
 
-              {sortedReferences.length === 0 && !loading && (
+              {sortedFolders.length === 0 && !loading && (
                 <motion.div
                   className="flex flex-col items-center justify-center py-12"
                   initial={{ opacity: 0 }}
@@ -571,7 +569,7 @@ const RevenueByReference = () => {
                     className="w-12 h-12 text-gray-400 mb-4"
                   />
                   <p className="text-lg text-gray-600">
-                    Aucun résultat trouvé pour l'année sélectionnée.
+                    Aucun Mois trouvé pour l'année sélectionnée
                   </p>
                 </motion.div>
               )}
@@ -583,4 +581,4 @@ const RevenueByReference = () => {
   );
 };
 
-export default RevenueByReference;
+export default RevenueByFolder;

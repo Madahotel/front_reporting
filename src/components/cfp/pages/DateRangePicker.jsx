@@ -1,88 +1,93 @@
-import React, { useState } from 'react';
-import DatePicker from 'react-datepicker';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths } from 'date-fns';
-import 'react-datepicker/dist/react-datepicker.css';
+import React, { useState } from "react";
+import DatePicker from "react-datepicker";
+import { format, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import "react-datepicker/dist/react-datepicker.css";
 
-const CustomDateRangePicker = ({ onChange, dateRange, setDateRange }) => {
+const CustomDateRangePicker = ({ dateRange, setDateRange }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const ranges = [
-    { label: 'Tous', value: 'all' },
-    { label: 'Aujourd\'hui', value: 'today' },
-    { label: 'Hier', value: 'yesterday' },
-    { label: '7 derniers jours', value: 'last7Days' },
-    { label: '30 derniers jours', value: 'last30Days' },
-    { label: 'Mois actuel', value: 'thisMonth' },
-    { label: 'Mois dernier', value: 'lastMonth' },
-    { label: 'Personnalisée', value: 'custom' }
+    { label: "Tous les dates", value: "all" },
+    { label: "Aujourd'hui", value: "today" },
+    { label: "Hier", value: "yesterday" },
+    { label: "7 derniers jours", value: "last7Days" },
+    { label: "30 derniers jours", value: "last30Days" },
+    { label: "Mois actuel", value: "thisMonth" },
+    { label: "Mois dernier", value: "lastMonth" },
+    { label: "Personnalisée", value: "custom" },
   ];
 
-  const handleRangeChange = (range) => {
+  const handleRangeChange = (rangeValue) => {
     const today = new Date();
-    let startDate, endDate;
+    let startDate, endDate, label;
 
-    switch (range) {
-      case 'today':
+    switch (rangeValue) {
+      case "today":
         startDate = today;
         endDate = today;
+        label = "Aujourd'hui";
         break;
-      case 'yesterday':
+      case "yesterday":
         startDate = subDays(today, 1);
         endDate = subDays(today, 1);
+        label = "Hier";
         break;
-      case 'last7Days':
+      case "last7Days":
         startDate = subDays(today, 6);
         endDate = today;
+        label = "7 derniers jours";
         break;
-      case 'last30Days':
+      case "last30Days":
         startDate = subDays(today, 29);
         endDate = today;
+        label = "30 derniers jours";
         break;
-      case 'thisMonth':
+      case "thisMonth":
         startDate = startOfMonth(today);
         endDate = endOfMonth(today);
+        label = "Mois actuel";
         break;
-      case 'lastMonth':
+      case "lastMonth":
         startDate = startOfMonth(subMonths(today, 1));
         endDate = endOfMonth(subMonths(today, 1));
+        label = "Mois dernier";
         break;
-      case 'all':
+      case "all":
         startDate = null;
         endDate = null;
+        label = "Tous les dates";
         break;
-      case 'custom':
+      case "custom":
       default:
-        return; // L'utilisateur sélectionnera manuellement
+        label = "Personnalisée";
+        break;
     }
 
     setDateRange({
-      range,
+      range: rangeValue,
       startDate,
       endDate,
-      label: ranges.find(r => r.value === range)?.label || 'Personnalisée'
+      label,
     });
-
-    if (range !== 'custom') {
-      onChange({ startDate, endDate });
-      setIsOpen(false);
-    }
+    setIsOpen(false);
   };
 
   const handleCustomDateChange = (dates) => {
     const [start, end] = dates;
-    setDateRange({
-      range: 'custom',
+    setDateRange((prev) => ({
+      ...prev,
+      range: "custom",
       startDate: start,
       endDate: end,
-      label: start && end 
-        ? `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`
-        : 'Personnalisée'
-    });
+      label:
+        start && end
+          ? `${format(start, "dd/MM/yyyy")} - ${format(end, "dd/MM/yyyy")}`
+          : "Personnalisée",
+    }));
   };
 
   const applyCustomRange = () => {
     if (dateRange.startDate && dateRange.endDate) {
-      onChange({ startDate: dateRange.startDate, endDate: dateRange.endDate });
       setIsOpen(false);
     }
   };
@@ -96,8 +101,18 @@ const CustomDateRangePicker = ({ onChange, dateRange, setDateRange }) => {
       >
         <span className="text-slate-400">Plage de date</span>
         <span className="grow">{dateRange.label}</span>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -110,7 +125,11 @@ const CustomDateRangePicker = ({ onChange, dateRange, setDateRange }) => {
                   <li key={value}>
                     <button
                       type="button"
-                      className={`w-full text-left px-3 py-2 rounded-md ${dateRange.range === value ? 'bg-[#A462A4] text-white' : 'hover:bg-gray-100'}`}
+                      className={`w-full text-left px-3 py-2 rounded-md ${
+                        dateRange.range === value
+                          ? "bg-[#A462A4] text-white"
+                          : "hover:bg-gray-100"
+                      }`}
                       onClick={() => handleRangeChange(value)}
                     >
                       {label}
@@ -133,12 +152,15 @@ const CustomDateRangePicker = ({ onChange, dateRange, setDateRange }) => {
             </div>
           </div>
 
-          {dateRange.range === 'custom' && (
+          {dateRange.range === "custom" && (
             <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
               <span className="text-sm text-gray-600">
                 {dateRange.startDate && dateRange.endDate
-                  ? `${format(dateRange.startDate, 'dd/MM/yyyy')} - ${format(dateRange.endDate, 'dd/MM/yyyy')}`
-                  : 'Sélectionnez une plage'}
+                  ? `${format(dateRange.startDate, "dd/MM/yyyy")} - ${format(
+                      dateRange.endDate,
+                      "dd/MM/yyyy"
+                    )}`
+                  : "Sélectionnez une plage"}
               </span>
               <div className="space-x-2">
                 <button
@@ -150,7 +172,11 @@ const CustomDateRangePicker = ({ onChange, dateRange, setDateRange }) => {
                 </button>
                 <button
                   type="button"
-                  className={`px-4 py-2 text-sm text-white rounded-md ${!dateRange.startDate || !dateRange.endDate ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#A462A4] hover:bg-[#A462A4b9]'}`}
+                  className={`px-4 py-2 text-sm text-white rounded-md ${
+                    !dateRange.startDate || !dateRange.endDate
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-[#A462A4] hover:bg-[#A462A4b9]"
+                  }`}
                   onClick={applyCustomRange}
                   disabled={!dateRange.startDate || !dateRange.endDate}
                 >
