@@ -96,11 +96,19 @@ const CustomDateRangePicker = ({ dateRange, setDateRange }) => {
     <div className="relative">
       <button
         type="button"
-        className="flex items-center gap-2 input input-bordered text-slate-600 w-full text-left"
+        className="flex items-center gap-2 input input-bordered text-slate-600 w-full text-left cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="text-slate-400">Plage de date</span>
-        <span className="grow">{dateRange.label}</span>
+        <span className="text-slate-400">
+          📅
+          <span className="text-blue-900 font-medium hover:underline cursor-pointer">
+            Filtrer par date clic ici
+          </span>
+        </span>
+
+        <span className="grow text-sm text-purple-600 font-medium truncate">
+          {dateRange.label}
+        </span>
         <svg
           className="w-4 h-4"
           fill="none"

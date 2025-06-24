@@ -42,7 +42,9 @@ const CustomerReporting = () => {
             "API response for client_list is not in the expected array format:",
             response.data
           );
-          throw new Error("Format de réponse invalide pour la liste de clients.");
+          throw new Error(
+            "Format de réponse invalide pour la liste de clients."
+          );
         }
       } catch (err) {
         console.error("Error fetching customer list:", err);
@@ -70,7 +72,9 @@ const CustomerReporting = () => {
     const filtered = customerList.filter(
       (customer) =>
         customer.customerName && // Ensure customerName exists
-        customer.customerName.toLowerCase().includes(customerInput.toLowerCase())
+        customer.customerName
+          .toLowerCase()
+          .includes(customerInput.toLowerCase())
     );
 
     setState((prev) => ({ ...prev, filteredCustomers: filtered }));
@@ -99,12 +103,11 @@ const CustomerReporting = () => {
           );
         }
 
-        const foundCustomer =
-          customerList.find(
-            (c) =>
-              c.customerName &&
-              c.customerName.toLowerCase() === customerName.toLowerCase()
-          ) || { customerName, idCustomer: null };
+        const foundCustomer = customerList.find(
+          (c) =>
+            c.customerName &&
+            c.customerName.toLowerCase() === customerName.toLowerCase()
+        ) || { customerName, idCustomer: null };
 
         setState((prev) => ({
           ...prev,
@@ -150,7 +153,8 @@ const CustomerReporting = () => {
   };
 
   const formatCurrency = (amount) => {
-    const numericAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+    const numericAmount =
+      typeof amount === "string" ? parseFloat(amount) : amount;
     if (isNaN(numericAmount)) return amount;
 
     return new Intl.NumberFormat("fr-MG", {
@@ -218,7 +222,9 @@ const CustomerReporting = () => {
           );
           return (
             <td key={`${yearData.year}-${monthName}`} className="p-3">
-              {monthData ? monthData.nb_project || monthData.nb_learner || 0 : 0}
+              {monthData
+                ? monthData.nb_project || monthData.nb_learner || 0
+                : 0}
             </td>
           );
         })}
@@ -240,49 +246,50 @@ const CustomerReporting = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-25 sm:px-6 lg:px-8">
-      <div className="mb-10">
-        <form onSubmit={handleFormSubmit} className="flex gap-4 items-center">
-          <div className="relative flex-1">
-            <label
-              htmlFor="customer-search"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Rechercher une entreprise
-            </label>
-            <div className="relative">
-              <input
-                id="customer-search"
-                type="text"
-                className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                placeholder="Saisissez le nom d'une entreprise..."
-                value={customerInput}
-                onChange={handleInputChange}
-                autoComplete="off"
-              />
-              {/* This is the suggestion list */}
-              {filteredCustomers.length > 0 && customerInput && ( // Only show if there's input and matches
-                <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {filteredCustomers.map((customer) => (
-                    <li
-                      key={customer.idCustomer} // Using idCustomer as key, ensures uniqueness
-                      className="px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors"
-                      onClick={() => handleCustomerSelect(customer)}
-                    >
-                      {customer.customerName}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+        <div className="text-center mb-8">
+          {/* <h1 className="text-2xl font-bold text-gray-800">Historique des Formations</h1> */}
+          <p className="block text-sm font-medium text-gray-700 mb-1">
+            Recherchez un client pour afficher son rapports de formation
+          </p>
+        </div>
+      <div className="relative">
+        <form
+          onSubmit={handleFormSubmit}
+          className="flex flex-col sm:flex-row gap-4"
+        >
+          <div className="relative flex-grow">
+            <input
+              id="customer-search"
+              type="text"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200"
+              placeholder="Saisissez le nom d'une entreprise..."
+              value={customerInput}
+              onChange={handleInputChange}
+              autoComplete="off"
+              disabled={loading}
+            />
+            {filteredCustomers.length > 0 && customerInput && (
+              <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {filteredCustomers.map((customer) => (
+                  <li
+                    key={customer.idCustomer}
+                    className="px-4 py-2 cursor-pointer hover:bg-purple-50 transition-colors"
+                    onMouseDown={() => handleCustomerSelect(customer)}
+                  >
+                    {customer.customerName}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <button
             type="submit"
-            className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200"
             disabled={loading || !customerInput}
           >
             {loading ? (
-              <span className="flex items-center">
+              <span className="flex items-center justify-center">
                 <svg
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                   xmlns="http://www.w3.org/2000/svg"
@@ -544,6 +551,5 @@ const CustomerReporting = () => {
     </div>
   );
 };
-
 
 export default CustomerReporting;

@@ -35,7 +35,7 @@ const FormationFilter = ({
     };
 
     return (
-        <form onSubmit={handleSubmit} className="w-full">
+        <form onSubmit={handleSubmit} className=" left-0 w-full z-50 bg-white shadow-md">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100">
                 <input type="hidden" name="_token" value="ZWlYvh1CmbIJ5ZeoMrtOguIkozKdKMgS24whnBTj" autoComplete="off" />
 
@@ -75,7 +75,7 @@ const FormationFilter = ({
                     <div className="col-span-1 md:col-span-2 flex items-center">
                         <button
                             type="submit"
-                            className={`w-full py-2.5 px-4 text-sm font-medium rounded-md shadow-sm transition duration-150 ${
+                            className={`px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200 cursor-pointer ${
                                 loading
                                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                     : 'bg-[#A462A4] text-white hover:bg-[#8e4f8e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#A462A4]'

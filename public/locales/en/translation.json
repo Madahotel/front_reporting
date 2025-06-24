@@ -1,0 +1,84 @@
+{
+  "navbar": {
+    "title": "Folders",
+    "search": "Search a folder (Ctrl+K)...",
+    "logout": "Logout",
+    "settings": "Settings",
+    "account": "My account",
+    "manageMyacount": "Manage My account",
+    "theme": {
+      "light": "Light mode",
+      "dark": "Dark mode"
+    },
+    "language": "Language",
+    "quarter": "Quarter",
+    "year": "Year"
+  },
+  "dossierDetail": {
+    "retourDossier": "back_to_folders",
+    "search": "Search a folder (Ctrl+K)...",
+    "logout": "Logout",
+    "settings": "Settings",
+    "account": "My account",
+    "manageMyacount": "Manage My account",
+    "theme": {
+      "light": "Light mode",
+      "dark": "Dark mode"
+    },
+    "language": "Language",
+    "quarter": "Quarter",
+    "year": "Year",
+    "project":"New Project"
+  },
+  "dossierList": {
+      "filter_folder": "Filter folder",
+      "new_folder": "New folder",
+      "display": "Display",
+      "record_count": "10 records",
+      "record_range": "1-0 of 0 records",
+      "table_headers": {
+      "record": "Record",
+      "type": "Type",
+      "modules": "Modules",
+      "city": "City",
+      "docs": "Docs",
+      "project": "Project",
+      "period": "Period",
+      "status": "Status",
+      "amount": "Amount"
+    },
+    "payroll": "Payroll"
+  },
+  "table_headers": {
+    "close": "Close",
+    "filter_folder": "Filter folder",
+    "new_folder": "New folder",
+    "create_new_folder": "Create a new folder",
+    "folder": "Folder",
+    "type": "Type",
+    "modules": "Modules",
+    "city": "City",
+    "docs": "Docs",
+    "project": "Project",
+    "period": "Period",
+    "status": "Status",
+    "amount": "Amount",
+    "paie": "Payroll",
+    "back_to_dossier": "Back to folder",
+    "folder_detail": "Folder detail",
+    "new_document": "New document",
+    "new_project": "Create project",
+    "update": "Upate",
+    "delete": "Delete",
+    "folder_name": "Folder Name",
+    "acount_total": "Account total",
+    "project_type": "Project type",
+    "related_projects": "Related projects",
+    "document_for_folder": "Document for folder",
+    "confirm_logout": "Confirm logout",
+    "you_are_sure": "You are sure want to logout?",
+    "logout": "Logout",
+    "cancel": "Cancel",
+    "home": "Home"
+  }
+}

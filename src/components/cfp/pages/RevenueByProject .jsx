@@ -195,7 +195,7 @@ const RevenueByProject = () => {
                       <td className="px-4 py-3 text-right text-sm text-gray-800 font-medium">{formatCurrency(project.cout)}</td>
                       <td className="px-4 py-3 text-right text-sm text-gray-800">{project.pourcentage}</td>
                       <td className="px-4 py-3 text-center text-sm">
-                        <a href={project.detail} className="text-blue-600 hover:text-blue-800">
+                        <a href={project.detail} className="text-purple-600 hover:text-purple-800">
                           <i className="fa-solid fa-eye text-lg"></i>
                         </a>
                       </td>

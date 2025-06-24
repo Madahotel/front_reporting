@@ -1,0 +1,72 @@
+{
+  "navbar": {
+    "manageMyacount":"Gerer mon compte",
+    "title": "Dossiers",
+    "search": "Rechercher un dossier (Ctrl+K)...",
+    "logout": "Déconnexion",
+    "settings": "Paramètres",
+    "account": "Mon compte",
+    "theme": {
+      "light": "Mode clair",
+      "dark": "Mode sombre"
+    },
+    "language": "Langue",
+    "quarter": "Trimestre",
+    "year": "Année"
+  },
+     "dossierList": {
+     "filter_folder": "Filtrer les dossiers",
+      "new_folder": "Nouveau dossier",
+      "display": "Afficher",
+      "record_count": "10 dossiers",
+      "record_range": "1-0 sur 0 dossiers",
+    "folder": "Dossier",
+    "type": "Type",
+    "modules": "Modules",
+    "city": "Ville",
+    "docs": "Docs",
+    "project": "Projet",
+    "period": "Période",
+    "status": "Statut",
+    "amount": "Montant",
+    "payroll": "Paie"
+    
+    
+  },
+     "table_headers": {
+    "close":"Fermer",
+    "filter_folder": "Filtre des dossiers",
+    "new_folder": "Nouveau dossier",
+    "create_new_folder":"Créer un nouveau dossier",
+    "folder":"Dossier",
+    "type": "Type",
+    "modules": "Modules",
+    "city": "Ville",
+    "docs": "Docs",
+    "project": "Projet",
+    "period": "Period",
+    "status": "Status",
+    "amount": "Montant",
+    "paie": "Paie",
+    "back_to_dossier": "Retour aux dossiers",
+    "folder_detail":"Détails du dossier",
+    "new_document":"Nouveau document",
+    "new_project":"Ajouter projet",
+    "update":"Modifier",
+    "delete":"Supprimer",
+    "folder_name":"Nom de dossier",
+    "acount_total":"Montant total",
+    "project_type":"Type de projets",
+    "related_projects":"Projets associés",
+    "document_for_folder":"Documents du dossier",
+    "confirm_logout":"Confirmer la déconnexion",
+    "you_are_sure":"Êtes-vous sûr de vouloir vous déconnecter ?",
+    "logout":"Se déconnecter",
+    "cancel":"Annuler",
+    "home":"Accueil"
+
+  },
+  "dossierDetail":{
+    "project":"Nouveau Project"
+  }
+}
