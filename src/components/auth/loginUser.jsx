@@ -23,15 +23,16 @@ const LoginUser = () => {
   const handleLoginSuccess = (userData, token, redirectTo) => {
     if (token && userData) {
       login(token); // Stocke le token côté AuthContext
-
       setUser(userData); // Met à jour le contexte utilisateur
 
       setSuccess(true);
       setTimeout(() => {
+        // Redirection vers la route déterminée par le backend
         if (redirectTo) {
           navigate(`/${redirectTo}`, { replace: true });
         } else {
-          navigate("/reporting/formation", { replace: true }); // Fallback si pas de route précisée
+          // Route de secours si le backend ne spécifie pas de redirection
+          navigate("/reporting/formation", { replace: true });
         }
       }, 1200);
     } else {
@@ -50,16 +51,19 @@ const LoginUser = () => {
         password,
       });
 
+      // Assure que le statut est 200 et qu'un token est présent
       if (response.status === 200 && response.data.token) {
         handleLoginSuccess(
           response.data.user,
           response.data.token,
-          response.data.redirect_to
+          response.data.redirect_to // Récupère la route de redirection du backend
         );
       } else {
+        // Gestion des erreurs de réponse API
         setError(response.data.message || "Identifiants invalides.");
       }
     } catch (err) {
+      // Gestion des erreurs réseau ou serveur
       setError(
         err.response?.data?.message || "Impossible de contacter le serveur."
       );
@@ -87,10 +91,7 @@ const LoginUser = () => {
           </h1>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white shadow-md rounded-xl p-6"
-        >
+        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-xl p-6">
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2">
               Adresse email

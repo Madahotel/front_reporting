@@ -3,9 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import HomeSection from "../src/components/cfp/pages/HomeSection";
-import LoginForm from "../src/components/auth/LoginForm";
-import LoginUser from "../src/components/auth/LoginUser";
-import RegisterForm from "../src/components/auth/register";
+import LoginForm from "./components/auth/loginForm";
+import LoginUser from "./components/auth/loginUser";
+import RegisterForm from "./components/auth/Register";
 import Navbar from "../src/components/layout/Navbar";
 import { Import, User } from "lucide-react";
 import { AuthProvider } from "./components/context/AuthContext";
@@ -21,6 +21,7 @@ import RevenueByMonth from "./components/cfp/pages/RevenueByMonth";
 import RevenueByReference from "./components/cfp/pages/RevenueByReference";
 import RevenueByFolder from "./components/cfp/pages/RevenueByFolder";
 import RevenueByCity from "./components/cfp/pages/RevenueByCity";
+import FormationReportEtp from "./components/etp/pages/FormationReportEtp";
 
 const App = () => {
   return (
@@ -34,7 +35,7 @@ const App = () => {
               <Route path="/login" element={<LoginForm />} />
               <Route path="/login/user" element={<LoginUser />} />
               <Route path="/register" element={<RegisterForm />} />
-              <Route path="/reporting/formation" element={<FormationReport />} />
+              <Route path="/home-cfp" element={<FormationReport />} />
               <Route path="/reporting/apprenant" element={<ApprenantFormationTimeline />} />
               <Route path="/reporting/client" element={<CustomerReporting />} />
               <Route path="/reporting/cours" element={<ProjectReporting />} />
@@ -45,6 +46,7 @@ const App = () => {
               <Route path="/reporting/revenuebyreference" element={<RevenueByReference />} />
               <Route path="/reporting/revenuebyfolder" element={<RevenueByFolder />} />
               <Route path="/reporting/revenuebycity" element={<RevenueByCity />} />
+              <Route path="/home-etp" element={<FormationReportEtp />} />
             </Routes>
           </Router>
         </UserProvider>

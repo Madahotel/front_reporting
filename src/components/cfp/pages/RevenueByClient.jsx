@@ -50,7 +50,7 @@ const RevenueByClient = () => {
           cost: parseFloat(project.total_ttc),
           start: project.date_debut,
           end: project.date_fin,
-          detail: `https://reporting.forma-fusion.com/cfp/projets/detail/${project.id_projet}`,
+          detail: `https://reporting.forma-fusion.com/cfp/projets/${project_id}/detail`,
           percentage: parseFloat(project.percentage),
         })),
       }));

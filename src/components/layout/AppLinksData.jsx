@@ -1,116 +1,71 @@
-// src/data/appLinksData.js
+import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
 
-const appLinksData = [
-  {
-    name: "Apprenants",
-    href: "https://apprenants.forma-fusion.com/cfp/apprenants",
-    icon: "https://reporting.forma-fusion.com/img/icones/Apprenants.png",
-  },
-  {
-    name: "Formateurs",
-    href: "https://formateurs.forma-fusion.com/cfp/forms",
-    icon: "https://reporting.forma-fusion.com/img/icones/Formateurs.png",
-  },
-  {
-    name: "Administrateurs",
-    href: "https://referents.forma-fusion.com/cfp/referents",
-    icon: "https://reporting.forma-fusion.com/img/icones/Administrateurs.png",
-  },
-  {
-    name: "Projets",
-    href: "https://projets.forma-fusion.com/cfp/projets",
-    icon: "https://reporting.forma-fusion.com/img/icones/Projets.png",
-  },
-  {
-    name: "Agenda",
-    href: "https://agenda.forma-fusion.com/agendaCfps",
-    icon: "https://reporting.forma-fusion.com/img/icones/Agenda.png",
-  },
-  {
-    name: "Réservation",
-    href: "https://reservation.forma-fusion.com/cfp/rsv/5",
-    icon: "https://reporting.forma-fusion.com/img/icones/Réservation.png",
-  },
-  {
-    name: "Suivi pédagogique",
-    href: "https://suivipeda.forma-fusion.com/cfp/peda",
-    icon: "https://reporting.forma-fusion.com/img/icones/Suivi%20p%C3%A9dagogique.png",
-  },
-  {
-    name: "Evaluation",
-    href: "https://evaluations.forma-fusion.com/cfp/projets",
-    icon: "https://reporting.forma-fusion.com/img/icones/Evaluation.png",
-  },
-  {
-    name: "Tests",
-    href: "https://tests.forma-fusion.com/qcm/index",
-    icon: "https://reporting.forma-fusion.com/img/icones/Tests.png",
-  },
-  {
-    name: "Factures",
-    href: "https://factures.forma-fusion.com/cfp/factures/id/1",
-    icon: "https://reporting.forma-fusion.com/img/icones/Factures.png",
-  },
-  {
-    name: "Clients",
-    href: "https://clients.forma-fusion.com/cfp/invites/etp/list/1",
-    icon: "https://reporting.forma-fusion.com/img/icones/Clients.png",
-  },
-  {
-    name: "Licence",
-    href: "https://licence.forma-fusion.com/cfp/abonnement",
-    icon: "https://reporting.forma-fusion.com/img/icones/Licence.png",
-  },
-  {
-    name: "Marketplace",
-    href: "https://marketplace.forma-fusion.com/",
-    icon: "https://reporting.forma-fusion.com/img/icones/Marketplace.png",
-  },
-  {
-    name: "Photos",
-    href: "https://photo.forma-fusion.com/cfp/gallery",
-    icon: "https://reporting.forma-fusion.com/img/icones/Photos.png",
-  },
-  {
-    name: "Catalogue",
-    href: "https://catalogue.forma-fusion.com/cfp/modules",
-    icon: "https://reporting.forma-fusion.com/img/icones/Catalogue.png",
-  },
-  {
-    name: "Présence",
-    href: "https://presence.forma-fusion.com/cfp/projets",
-    icon: "https://reporting.forma-fusion.com/img/icones/Présence.png",
-  },
-  {
-    name: "Dossiers",
-    href: "https://dossiers.forma-fusion.com/cfp/dossier",
-    icon: "https://reporting.forma-fusion.com/img/icones/Dossiers.png",
-  },
-  {
-    name: "Badges",
-    href: "https://badge.forma-fusion.com/cfp/badge",
-    icon: "https://reporting.forma-fusion.com/img/icones/Badges.png",
-  },
-  {
-    name: "Lieu et Salle",
-    href: "https://lieu-salle.forma-fusion.com/cfp/lieux",
-    icon: "https://reporting.forma-fusion.com/img/icones/Lieu%20et%20Salle.png",
-  },
-  {
-    name: "Analytics",
-    href: "https://analytics.forma-fusion.com/home",
-    icon: "https://reporting.forma-fusion.com/img/icones/Analytics.png",
-  },
-  {
-    name: "Reporting",
-    href: "https://reporting.forma-fusion.com/reporting/formation",
-    icon: "https://reporting.forma-fusion.com/img/icones/Reporting.png",
-  },
-  {
-    name: "Support",
-    href: "https://support.forma-fusion.com",
-    icon: "https://reporting.forma-fusion.com/img/icones/inscription.png",
-  },
-];
+const AppLauncherGrid = () => {
+  const [appLaunchers, setAppLaunchers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default appLinksData;
+  useEffect(() => {
+    const fetchAppLaunchers = async () => {
+      try {
+        const response = await api.get('/app_launcher');
+        if (response.data.status === 'success' && Array.isArray(response.data.data)) {
+          const formattedData = response.data.data.map(item => ({
+            name: item.label,
+            href: item.link,
+            icon: `https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/${item.icone}`,
+          }));
+          setAppLaunchers(formattedData);
+        } else {
+          setError('Format de réponse API invalide.');
+          setAppLaunchers([]);
+        }
+      } catch (err) {
+        console.error('Erreur lors de la récupération des lanceurs d\'applications :', err);
+        setError('Échec du chargement des liens d\'application. Veuillez réessayer plus tard.');
+        setAppLaunchers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppLaunchers();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <p className="ml-3 text-gray-700">Chargement des applications...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 p-4">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4">
+      {appLaunchers.map(({ name, href, icon }) => (
+        <a
+          key={name}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
+        >
+          <img src={icon} alt={name} className="w-12 h-12 mb-2" />
+          <span className="text-sm font-medium text-gray-700 text-center">{name}</span>
+        </a>
+      ))}
+    </div>
+  );
+};
+
+export default AppLauncherGrid;

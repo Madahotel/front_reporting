@@ -35,7 +35,7 @@ const RevenueByProject = () => {
         fin: project.date_fin,
         cout: project.total_ttc,
         pourcentage: `${project.percentage} %`,
-        detail: `https://reporting.forma-fusion.com/cfp/projets/704/detail`
+        detail: `https://reporting.forma-fusion.com/cfp/projets/{idProjet}/detail`
       }));
 
       setProjects(formattedProjects);
@@ -195,10 +195,14 @@ const RevenueByProject = () => {
                       <td className="px-4 py-3 text-right text-sm text-gray-800 font-medium">{formatCurrency(project.cout)}</td>
                       <td className="px-4 py-3 text-right text-sm text-gray-800">{project.pourcentage}</td>
                       <td className="px-4 py-3 text-center text-sm">
-                        <a href={project.detail} className="text-purple-600 hover:text-purple-800">
+                        <a
+                          href={`https://reporting.forma-fusion.com/cfp/projets/${project.id}/detail`}
+                          className="text-purple-600 hover:text-purple-800"
+                        >
                           <i className="fa-solid fa-eye text-lg"></i>
                         </a>
                       </td>
+
                     </motion.tr>
                   ))}
                   <tr className="bg-gray-100 font-bold text-gray-800">

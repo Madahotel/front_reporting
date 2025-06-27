@@ -52,7 +52,7 @@ const RevenueByFolder = () => {
           cost: parseFloat(project.total_ttc),
           start: project.dateDebut,
           end: project.dateFin,
-          detail: `https://reporting.forma-fusion.com/cfp/projets/detail/${project.id_projet}`,
+          detail: `https://reporting.forma-fusion.com/cfp/projets/165/detail`,
           percentage: parseFloat(project.percentage), // <-- ADDED THIS LINE
         })),
       }));
