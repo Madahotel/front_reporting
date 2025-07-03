@@ -186,13 +186,7 @@ const Navbar = () => {
   // --- NEW useEffect FOR FETCHING APP LAUNCHERS ---
   useEffect(() => {
     const fetchAppLaunchers = async () => {
-      if (!isAuthenticated) {
-        // Only fetch if authenticated
-        setLoadingAppLaunchers(false);
-        setAppLaunchers([]); // Clear previous launchers if not authenticated
-        return;
-      }
-
+      setLoadingAppLaunchers(true); // Always set loading to true when fetching
       try {
         const response = await api.get("/app_launcher");
         if (
@@ -221,7 +215,7 @@ const Navbar = () => {
     };
 
     fetchAppLaunchers();
-  }, [isAuthenticated]); // Rerun when authentication status changes
+  }, []);
 
   // --- END NEW useEffect ---
 
@@ -260,8 +254,9 @@ const Navbar = () => {
       return [
         { name: "Formation", to: "/home-etp" },
         { name: "Employé", to: "/reporting/employe" },
-        { name: "Centre de formation", to: "/reporting/cfp" },
-        { name: "Cours", to: "/reporting/cours" },
+        { name: "Centre de formation", to: "/reporting/cfpetp" },
+        { name: "Cours", to: "/reporting/coursEtp" },
+        { name: "Coûts de formation", to: "/reporting/revenue" },
       ];
     } else {
       console.log("⛔️ Aucune navigation affichée pour ce rôle");

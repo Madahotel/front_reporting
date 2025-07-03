@@ -1,11 +1,27 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from "@tailwindcss/vite";
+import path from 'path';
 
-
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),
-     tailwindcss(),
+  plugins: [
+    tailwindcss(),
+    react()
   ],
+  build: {
+    outDir: '../back_reporting/public/react',
+    emptyOutDir: true,
+  },
+  //  base: '/react/', // Raha mampiasa sub-directory ao amin'ny public
+  resolve: {
+    alias: {
+      hooks: path.resolve(__dirname, './src/hooks'),
+      utils: path.resolve(__dirname, './src/utils'),
+      components: path.resolve(__dirname, './src/components'),
+    },
+  },
 })
+
+
+
+

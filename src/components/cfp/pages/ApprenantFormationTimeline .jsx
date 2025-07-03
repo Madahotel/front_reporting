@@ -405,7 +405,7 @@ const ApprenantFormationTimeline = () => {
                     <div className="w-full lg:w-2/3 pl-0 lg:pl-4 text-xs">
                       <Link
                         title={learner.module_name}
-                        to={`/formation_inter/detail/${learner.idModule}/${learner.learner_id}`}
+                        to={`/learner/project/${learner.idModule}/${learner.learner_id}`}
                         className="text-sm font-semibold text-purple-700 hover:underline line-clamp-1"
                       >
                         {learner.module_name}

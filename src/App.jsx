@@ -22,6 +22,11 @@ import RevenueByReference from "./components/cfp/pages/RevenueByReference";
 import RevenueByFolder from "./components/cfp/pages/RevenueByFolder";
 import RevenueByCity from "./components/cfp/pages/RevenueByCity";
 import FormationReportEtp from "./components/etp/pages/FormationReportEtp";
+import ReportingEmploye from "./components/etp/pages/ReportingEmploye";
+import CentreFormationReport from "./components/etp/pages/CentreFormationReport ";
+import CoursReporting from "./components/etp/pages/CoursReporting";
+import ReportingRevenue from "./components/etp/pages/ReportingRevenue";
+import Footer from "./components/footer/Footer";
 
 const App = () => {
   return (
@@ -47,7 +52,12 @@ const App = () => {
               <Route path="/reporting/revenuebyfolder" element={<RevenueByFolder />} />
               <Route path="/reporting/revenuebycity" element={<RevenueByCity />} />
               <Route path="/home-etp" element={<FormationReportEtp />} />
+              <Route path="/reporting/employe" element={<ReportingEmploye />} />
+              <Route path="/reporting/cfpetp" element={<CentreFormationReport  />} />
+              <Route path="/reporting/coursEtp" element={<CoursReporting  />} />
+              <Route path="/reporting/revenue" element={<ReportingRevenue  />} />
             </Routes>
+            <Footer />
           </Router>
         </UserProvider>
       </AuthProvider>

@@ -151,10 +151,10 @@ const FormationFilter = ({
           <div className="col-span-1 md:col-span-2 flex items-center">
             <button
               type="submit"
-              className={`px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200 cursor-pointer ${
+              className={`px-6 py-3 bg-[#A462A4] hover:bg-[#A462A4b9] text-white font-medium rounded-lg transition duration-200 cursor-pointer ${
                 loading
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-[#A462A4] text-white hover:bg-[#8e4f8e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#A462A4]"
+                  : "bg-[#A462A4] hover:bg-[#A462A4b9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#A462A4]"
               }`}
               disabled={loading}
             >
