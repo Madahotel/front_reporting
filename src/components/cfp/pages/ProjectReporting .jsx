@@ -1,13 +1,37 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import api from "../../utils/api";
+import { UserContext } from "../../context/UserContext";
+import { formatMontant } from "../../utils/formatMontant";
+import { useParams, Link } from 'react-router-dom'; // Add Link here
 
 const ProjectReporting = () => {
   const [modules, setModules] = useState([]);
   const [selectedModule, setSelectedModule] = useState("");
   const [moduleDetails, setModuleDetails] = useState(null);
-  const [projectsByYear, setProjectsByYear] = useState({}); // Renamed state to reflect the new structure
+  const [projectsByYear, setProjectsByYear] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const { setting } = useContext(UserContext);
+
+  useEffect(() => {
+    if (!setting) {
+      console.warn("Setting n'est pas encore chargé");
+    } else {
+      console.log("Setting chargé:", setting);
+    }
+  }, [setting]);
+
+  const currency = setting?.currency_code || "XOF";
+  const [state, setState] = useState({
+    customerInput: "",
+    customerList: [],
+    filteredCustomers: [],
+    selectedCustomer: null,
+    reportingData: null,
+    loading: false,
+    error: null,
+  });
 
   // Fetch modules on component mount
   useEffect(() => {
@@ -86,6 +110,13 @@ const ProjectReporting = () => {
 
   return (
     <div className="flex-grow pt-20 lg:pt-20">
+      <div className="text-center mb-8">
+        {/* <h1 className="text-2xl font-bold text-gray-800">Historique des Formations</h1> */}
+        <p className="block text-sm font-medium text-gray-700 mb-1 pt-5">
+          Veuillez sélectionner un module afin d’afficher son rapport de
+          formation
+        </p>
+      </div>
       <div className="flex flex-col w-full px-4 mx-auto mt-2 xl:p-0 gap-y-4 xl:container align-center">
         <div className="flex justify-center w-full">
           <form className="flex gap-2" onSubmit={handleFilterSubmit}>
@@ -221,7 +252,10 @@ const ProjectReporting = () => {
                                 {project.date_fin}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {project.prix.toLocaleString()} Ar
+                                {formatMontant(
+                                  project.prix.toLocaleString(),
+                                  currency
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span
@@ -242,16 +276,12 @@ const ProjectReporting = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {project.lieu}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                {project.idProjet && (
-                                  <a
-                                    href={`/cfp/projets/${project.idProjet}/detail`}
-                                    className="text-[#A462A4] hover:text-[#A462A4b9]"
-                                  >
-                                    <i className="fa-solid fa-eye"></i>
-                                  </a>
-                                )}
-                              </td>
+ <Link
+  to={`/reporting/project/detail/${project.idProjet}`} // Use template literal to inject idProjet
+  className="text-[#A462A4] hover:text-[#A462A4b9]"
+>
+  <i className="fa-solid fa-eye"></i>
+</Link>
                             </tr>
                           ))}
                         </tbody>

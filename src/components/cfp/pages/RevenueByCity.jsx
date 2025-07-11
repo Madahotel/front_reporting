@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo,useContext } from "react";
 import api from "../../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { UserContext } from "../../context/UserContext";
+import { formatMontant } from "../../utils/formatMontant";
 import {
   faArrowDown,
   faEye,
@@ -29,6 +31,27 @@ const RevenueByCity = () => {
     return yearsArray.sort((a, b) => b - a);
   }, [currentYear]);
 
+      const { setting } = useContext(UserContext);
+      
+        useEffect(() => {
+          if (!setting) {
+            console.warn("Setting n'est pas encore chargé");
+          } else {
+            console.log("Setting chargé:", setting);
+          }
+        }, [setting]);
+      
+        const currency = setting?.currency_code || "XOF";
+        const [state, setState] = useState({
+          customerInput: "",
+          customerList: [],
+          filteredCustomers: [],
+          selectedCustomer: null,
+          reportingData: null,
+          loading: false,
+          error: null,
+        });
+
   useEffect(() => {
     const fetchData = async (year) => {
       setLoading(true);
@@ -49,7 +72,7 @@ const RevenueByCity = () => {
             total_ttc: parseFloat(project.totalTtc),
             start: '',
             end: '',
-            detail: `https://reporting.forma-fusion.com/cfp/projets/detail/${project.codePostal}`,
+            detail: `https://projets.forma-fusion.com`,
             percentage: parseFloat(project.percentage),
           })),
         }));
@@ -351,7 +374,7 @@ const RevenueByCity = () => {
                             icon={faSort}
                             className="mr-1 text-gray-400"
                           />
-                          <span>Coût (Ar)</span>
+                          <span>Coût</span>
                         </div>
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -383,7 +406,7 @@ const RevenueByCity = () => {
                             {city.projectCount || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatCurrency(city.total_ttc)}
+                            {formatMontant(city.total_ttc,currency)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             {city.percentage?.toFixed(2) || "0.00"} %
@@ -443,7 +466,7 @@ const RevenueByCity = () => {
                                             Nombre du Projet
                                           </th>
                                           <th className="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                            Coût (Ar)
+                                            Coût
                                           </th>
                                           <th className="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
                                             Pourcentage
@@ -480,8 +503,8 @@ const RevenueByCity = () => {
                                                   {project.projectCount}
                                                 </td>
                                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                  {formatCurrency(
-                                                    project.totalTtc
+                                                  {formatMontant(
+                                                    project.totalTtc,currency
                                                   )}
                                                 </td>
                                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
@@ -545,7 +568,7 @@ const RevenueByCity = () => {
                         {data.totalProjects}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
-                        {formatCurrency(data.total_price)}
+                        {formatMontant(data.total_price,currency)}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
                         100 %

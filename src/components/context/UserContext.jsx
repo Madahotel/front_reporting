@@ -6,8 +6,9 @@ export const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [accountType, setAccountType] = useState(null);
+  const [setting, setSetting] = useState(null);
 
-  // Fonction utilitaire pour convertir le code type en texte
+  // 🔧 Fonction utilitaire pour transformer le type de compte
   const getAccountTypeText = (typeCode) => {
     const code = typeof typeCode === "string" ? typeCode : String(typeCode);
     switch (code) {
@@ -32,16 +33,18 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // ✅ Chargement depuis localStorage au premier rendu
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const storedAccountType = localStorage.getItem("accountType");
+    const storedSetting = localStorage.getItem("setting");
 
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
+        console.log("👤 Utilisateur localStorage :", parsedUser);
         setUser(parsedUser);
 
-        // Si accountType n'est pas encore dans le localStorage mais existe dans l'objet user
         if (!storedAccountType && parsedUser?.account_type) {
           const accountTypeText = getAccountTypeText(parsedUser.account_type);
           localStorage.setItem("accountType", accountTypeText);
@@ -50,16 +53,27 @@ export const UserProvider = ({ children }) => {
           setAccountType(storedAccountType);
         }
       } catch (error) {
-        console.error("❌ Erreur lors du parsing de l'utilisateur :", error);
+        console.error("❌ Erreur parsing user :", error);
         localStorage.removeItem("user");
       }
     } else {
       setUser(null);
       setAccountType(null);
     }
+
+    if (storedSetting) {
+      try {
+        const parsedSetting = JSON.parse(storedSetting);
+        console.log("⚙️ Paramètres setting depuis localStorage :", parsedSetting);
+        setSetting(parsedSetting);
+      } catch (error) {
+        console.error("❌ Erreur parsing setting :", error);
+      }
+    }
   }, []);
 
-  const updateUser = (userData) => {
+  // ✅ Fonction de mise à jour à partir de la réponse API
+  const updateUser = (userData, settingData = null, token = null) => {
     if (!userData) return;
 
     console.log("🔄 Mise à jour de l'utilisateur :", userData);
@@ -74,14 +88,29 @@ export const UserProvider = ({ children }) => {
     } else {
       console.warn("⚠️ Aucun type de compte dans userData");
     }
+
+    if (settingData) {
+      console.log("⚙️ Mise à jour des paramètres setting :", settingData);
+      localStorage.setItem("setting", JSON.stringify(settingData));
+      setSetting(settingData);
+    }
+
+    if (token) {
+      console.log("🔑 Token reçu :", token);
+      localStorage.setItem("token", token);
+    }
   };
 
+  // ✅ Déconnexion
   const logout = () => {
     console.log("👋 Déconnexion...");
     localStorage.removeItem("user");
     localStorage.removeItem("accountType");
+    localStorage.removeItem("setting");
+    localStorage.removeItem("token");
     setUser(null);
     setAccountType(null);
+    setSetting(null);
   };
 
   return (
@@ -89,10 +118,11 @@ export const UserProvider = ({ children }) => {
       value={{
         user,
         accountType,
+        setting,
         setUser: updateUser,
         logout,
         isAuthenticated: !!user,
-        setAccountType, 
+        setAccountType,
       }}
     >
       {children}

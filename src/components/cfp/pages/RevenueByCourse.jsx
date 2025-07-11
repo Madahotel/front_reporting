@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo,useContext } from "react";
 import api from "../../utils/api";
+import { UserContext } from "../../context/UserContext";
+import { formatMontant } from "../../utils/formatMontant";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDown,
@@ -34,6 +36,28 @@ const RevenueByCourse = () => {
     fetchData(selectedYear);
   }, [selectedYear]);
 
+
+    const { setting } = useContext(UserContext);
+    
+      useEffect(() => {
+        if (!setting) {
+          console.warn("Setting n'est pas encore chargé");
+        } else {
+          console.log("Setting chargé:", setting);
+        }
+      }, [setting]);
+    
+      const currency = setting?.currency_code || "XOF";
+      const [state, setState] = useState({
+        customerInput: "",
+        customerList: [],
+        filteredCustomers: [],
+        selectedCustomer: null,
+        reportingData: null,
+        loading: false,
+        error: null,
+      });
+
   const fetchData = async (year) => {
     setLoading(true);
     setError(null);
@@ -53,7 +77,7 @@ const RevenueByCourse = () => {
           percentage: parseFloat(project.percentage),
           start: project.date_debut,
           end: project.date_fin,
-          detail: ` https://reporting.forma-fusion.com/cfp/projets/123/detail`,
+          detail: `https://projets.forma-fusion.com`,
          
         })),
       }));
@@ -336,7 +360,7 @@ const RevenueByCourse = () => {
                             icon={faArrowUpWideShort}
                             className="mr-1 text-gray-400"
                           />
-                          <span>Coût (Ar)</span>
+                          <span>Coût</span>
                         </div>
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -369,7 +393,7 @@ const RevenueByCourse = () => {
                             {module.projects?.length || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatCurrency(module.total_ttc)}
+                            {formatMontant(module.total_ttc,currency)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             {module.percentage?.toFixed(2) || "0.00"} %
@@ -474,8 +498,7 @@ const RevenueByCourse = () => {
                                                 {project.dateFin}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {formatCurrency(project.cost)}{" "}
-                                                Ar
+                                                {formatMontant(project.cost,currency)}{" "}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
                                                 {project.percentage?.toFixed(
@@ -521,7 +544,7 @@ const RevenueByCourse = () => {
                         {data.totalProjects}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
-                        {formatCurrency(data.total_price)}
+                        {formatMontant(data.total_price,currency)}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
                         100 %

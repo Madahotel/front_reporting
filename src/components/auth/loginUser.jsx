@@ -20,10 +20,10 @@ const LoginUser = () => {
   const { setUser } = useContext(UserContext);
   const { login } = useAuth();
 
-  const handleLoginSuccess = (userData, token, redirectTo) => {
+  const handleLoginSuccess = (userData, token, redirectTo, settingData) => {
     if (token && userData) {
       login(token); // Stocke le token côté AuthContext
-      setUser(userData); // Met à jour le contexte utilisateur
+      setUser(userData, settingData, token); // Met à jour le contexte utilisateur
 
       setSuccess(true);
       setTimeout(() => {
@@ -39,7 +39,6 @@ const LoginUser = () => {
       setError("Erreur lors de la connexion. Veuillez réessayer.");
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -51,19 +50,17 @@ const LoginUser = () => {
         password,
       });
 
-      // Assure que le statut est 200 et qu'un token est présent
       if (response.status === 200 && response.data.token) {
         handleLoginSuccess(
           response.data.user,
           response.data.token,
-          response.data.redirect_to // Récupère la route de redirection du backend
+          response.data.redirect_to,
+          response.data.setting // Ajout du setting ici
         );
       } else {
-        // Gestion des erreurs de réponse API
         setError(response.data.message || "Identifiants invalides.");
       }
     } catch (err) {
-      // Gestion des erreurs réseau ou serveur
       setError(
         err.response?.data?.message || "Impossible de contacter le serveur."
       );
@@ -86,12 +83,15 @@ const LoginUser = () => {
             alt="Logo"
             className="w-24 h-24 mt-2 animate-pulse"
           />
-          <h1 className="text-2xl font-extrabold text-[#A462A4] mt-4">
+          <h1 className="text-2xl font-extrabold text-purple-600 mt-4">
             Entrez votre mot de passe
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-xl p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white shadow-md rounded-xl p-6"
+        >
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2">
               Adresse email
@@ -139,7 +139,7 @@ const LoginUser = () => {
           <motion.button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#A462A4] text-white py-2 rounded-md hover:bg-[#924b92] transition flex items-center justify-center cursor-pointer"
+            className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-[#924b92] transition flex items-center justify-center cursor-pointer"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
@@ -161,14 +161,14 @@ const LoginUser = () => {
           <div className="text-right mt-3">
             <Link
               to="https://dossiers.forma-fusion.com/resend_password"
-              className="text-sm text-[#A462A4] underline"
+              className="text-sm text-purple-600 underline"
             >
               Mot de passe oublié ?
             </Link>
           </div>
         </form>
 
-        <p className="pt-6 text-center text-sm text-[#a462a4] underline">
+        <p className="pt-6 text-center text-sm text-purple-600 underline">
           <Link to="/register">Pas encore de compte ? Inscrivez-vous</Link>
         </p>
       </motion.div>

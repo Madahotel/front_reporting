@@ -320,7 +320,7 @@ const Navbar = () => {
                 </button>
               </div>
               <Link
-                to="/reporting/formation"
+                to="#"
                 className="flex items-center gap-2"
                 onClick={() => closeAllDropdownsExcept()}
               >
@@ -675,7 +675,7 @@ const Navbar = () => {
               ) : (
                 <Link
                   to="/login"
-                  className="px-4 py-2 rounded-md bg-[#87388C] text-white hover:bg-[#A462A4] transition-colors duration-200"
+                  className="px-4 py-2 rounded-md bg-purple-700 text-white hover:bg-[#A462A4] transition-colors duration-200"
                   onClick={() => closeAllDropdownsExcept()}
                 >
                   Se connecter

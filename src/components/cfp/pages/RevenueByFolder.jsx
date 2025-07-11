@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo,useContext } from "react";
 import api from "../../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { UserContext } from "../../context/UserContext";
+import { formatMontant } from "../../utils/formatMontant";
 import {
   faArrowDown,
   faEye,
@@ -35,6 +37,27 @@ const RevenueByFolder = () => {
     fetchData(selectedYear);
   }, [selectedYear]);
 
+      const { setting } = useContext(UserContext);
+      
+        useEffect(() => {
+          if (!setting) {
+            console.warn("Setting n'est pas encore chargé");
+          } else {
+            console.log("Setting chargé:", setting);
+          }
+        }, [setting]);
+      
+        const currency = setting?.currency_code || "XOF";
+        const [state, setState] = useState({
+          customerInput: "",
+          customerList: [],
+          filteredCustomers: [],
+          selectedCustomer: null,
+          reportingData: null,
+          loading: false,
+          error: null,
+        });
+
   const fetchData = async (year) => {
     setLoading(true);
     setError(null);
@@ -52,7 +75,7 @@ const RevenueByFolder = () => {
           cost: parseFloat(project.total_ttc),
           start: project.dateDebut,
           end: project.dateFin,
-          detail: `https://projet.forma-fusion.com/cfp/projets/${project.id}?access_key=12345ABC`,
+          detail: ` https://projets.forma-fusion.com`,
           
           percentage: parseFloat(project.percentage), // <-- ADDED THIS LINE
         })),
@@ -356,7 +379,7 @@ const RevenueByFolder = () => {
                             icon={faSort}
                             className="mr-1 text-gray-400"
                           />
-                          <span>Coût (Ar)</span>
+                          <span>Coût</span>
                         </div>
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -388,7 +411,7 @@ const RevenueByFolder = () => {
                             {folder.count_project || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatCurrency(folder.total_ttc)}
+                            {formatMontant(folder.total_ttc,currency)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             {folder.percentage?.toFixed(2) || "0.00"} %
@@ -497,10 +520,9 @@ const RevenueByFolder = () => {
                                                 {project.dateFin}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {formatCurrency(
-                                                  project.total_ttc
+                                                {formatMontant(
+                                                  project.total_ttc,currency
                                                 )}{" "}
-                                                Ar
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
                                                 {project.percentage?.toFixed(
@@ -548,7 +570,7 @@ const RevenueByFolder = () => {
                         {data.totalProjects}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
-                        {formatCurrency(data.total_price)}
+                        {formatMontant(data.total_price,currency)}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
                         100 %

@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo,useContext } from "react";
 import api from "../../utils/api";
+import { UserContext } from "../../context/UserContext";
+import { formatMontant } from "../../utils/formatMontant";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDown,
@@ -20,6 +22,27 @@ const RevenueByClient = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+     const { setting } = useContext(UserContext);
+      
+        useEffect(() => {
+          if (!setting) {
+            console.warn("Setting n'est pas encore chargé");
+          } else {
+            console.log("Setting chargé:", setting);
+          }
+        }, [setting]);
+      
+        const currency = setting?.currency_code || "XOF";
+        const [state, setState] = useState({
+          customerInput: "",
+          customerList: [],
+          filteredCustomers: [],
+          selectedCustomer: null,
+          reportingData: null,
+          loading: false,
+          error: null,
+        });
 
   const years = useMemo(() => {
     const yearsArray = [];
@@ -50,7 +73,7 @@ const RevenueByClient = () => {
           cost: parseFloat(project.total_ttc),
           start: project.date_debut,
           end: project.date_fin,
-          detail: `https://reporting.forma-fusion.com/cfp/projets/123/detail`,
+          detail: `https://projets.forma-fusion.com`,
           percentage: parseFloat(project.percentage),
         })),
       }));
@@ -347,7 +370,7 @@ const RevenueByClient = () => {
                             icon={faSort}
                             className="mr-1 text-gray-400"
                           />
-                          <span>Coût (Ar)</span>
+                          <span>Coût</span>
                         </div>
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -380,7 +403,7 @@ const RevenueByClient = () => {
                             {customer.count_project || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatCurrency(customer.total_ttc)}
+                            {formatMontant(customer.total_ttc,currency)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             {customer.percentage?.toFixed(2) || "0.00"} %
@@ -482,10 +505,9 @@ const RevenueByClient = () => {
                                                 {project.dateFin}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {formatCurrency(
-                                                  project.total_ttc
+                                                {formatMontant(
+                                                  project.total_ttc,currency
                                                 )}{" "}
-                                                Ar
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
                                                 {project.percentage?.toFixed(
@@ -533,7 +555,7 @@ const RevenueByClient = () => {
                         {data.totalProjects}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
-                        {formatCurrency(data.total_price)}
+                        {formatMontant(data.total_price,currency)}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
                         100 %

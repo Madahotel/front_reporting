@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo,useContext } from 'react';
+import { UserContext } from "../../context/UserContext";
+import { formatMontant } from "../../utils/formatMontant";
 import api from '../../utils/api';
 import { motion } from 'framer-motion';
+import { useParams, Link } from 'react-router-dom'; // Add Link here
 
 const RevenueByProject = () => {
   const currentYear = new Date().getFullYear();
@@ -12,6 +15,28 @@ const RevenueByProject = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+   const { setting } = useContext(UserContext);
+  
+    useEffect(() => {
+      if (!setting) {
+        console.warn("Setting n'est pas encore chargé");
+      } else {
+        console.log("Setting chargé:", setting);
+      }
+    }, [setting]);
+  
+    const currency = setting?.currency_code || "XOF";
+    const [state, setState] = useState({
+      customerInput: "",
+      customerList: [],
+      filteredCustomers: [],
+      selectedCustomer: null,
+      reportingData: null,
+      loading: false,
+      error: null,
+    });
+  
 
   const years = useMemo(() => {
     return [currentYear + 1, currentYear, currentYear - 1];
@@ -35,7 +60,7 @@ const RevenueByProject = () => {
         fin: project.date_fin,
         cout: project.total_ttc,
         pourcentage: `${project.percentage} %`,
-        detail: `https://reporting.forma-fusion.com/cfp/projets/{idProjet}/detail`
+        detail: `/reporting/project/detail/${project.idProjet}`
       }));
 
       setProjects(formattedProjects);
@@ -175,8 +200,11 @@ const RevenueByProject = () => {
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-blue-600" onClick={() => sortTable('fin')}>
                       <i className="fa-solid fa-arrow-up-wide-short mr-1"></i> Fin
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-blue-600" onClick={() => sortTable('cout')}>
-                      <i className="fa-solid fa-arrow-up-wide-short mr-1"></i> Coût (Ar)
+                    <th
+                      className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-blue-600"
+                      onClick={() => sortTable('cout')}
+                    >
+                      <i className="fa-solid fa-arrow-up-wide-short mr-1"></i> Coût
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-blue-600" onClick={() => sortTable('pourcentage')}>
                       Pourcentage
@@ -192,22 +220,22 @@ const RevenueByProject = () => {
                       <td className="px-4 py-3 text-sm text-gray-800">{project.reference}</td>
                       <td className="px-4 py-3 text-right text-sm text-gray-800">{project.debut}</td>
                       <td className="px-4 py-3 text-right text-sm text-gray-800">{project.fin}</td>
-                      <td className="px-4 py-3 text-right text-sm text-gray-800 font-medium">{formatCurrency(project.cout)}</td>
+                      <td className="px-4 py-3 text-right text-sm text-gray-800 font-medium">{formatMontant(project.cout,currency)}</td>
                       <td className="px-4 py-3 text-right text-sm text-gray-800">{project.pourcentage}</td>
                       <td className="px-4 py-3 text-center text-sm">
-                        <a
-                          href={`https://reporting.forma-fusion.com/cfp/projets/${project.id}/detail`}
-                          className="text-purple-600 hover:text-purple-800"
-                        >
-                          <i className="fa-solid fa-eye text-lg"></i>
-                        </a>
+ <Link
+  to={`/reporting/project/detail/${project.idProjet}`} 
+  className="text-[#A462A4] hover:text-[#A462A4b9]"
+>
+  <i className="fa-solid fa-eye"></i>
+</Link>
                       </td>
 
                     </motion.tr>
                   ))}
                   <tr className="bg-gray-100 font-bold text-gray-800">
                     <td colSpan="5" className="px-4 py-3 text-right text-sm uppercase">Total</td>
-                    <td className="px-4 py-3 text-right text-sm">{formatCurrency(totalPrice)}</td>
+                    <td className="px-4 py-3 text-right text-sm">{formatMontant(totalPrice,currency)}</td>
                     <td className="px-4 py-3 text-right text-sm">100 %</td>
                     <td></td>
                   </tr>

@@ -1,49 +1,75 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheckIcon, ChartBarIcon } from "@heroicons/react/24/solid";
+import { ShieldCheckIcon, ChartBarIcon, ArrowRightIcon } from "@heroicons/react/24/solid";
 
 const HomeSection = () => {
   return (
-    <div className="flex items-center justify-center w-full h-full min-h-screen bg-gradient-to-br from-gray-100 to-purple-100 dark:from-gray-900 dark:to-purple-900 overflow-hidden relative">
-      {/* Decorative Icons */}
-      <div className="absolute top-10 left-10 animate-pulse">
-        <ChartBarIcon className="w-8 h-8 text-purple-300 opacity-70" />
+    <div className="flex flex-col md:flex-row items-center justify-center w-full min-h-screen bg-gradient-to-br from-[#f9f9fb] to-white overflow-hidden px-6 md:px-16 lg:px-24 py-16 lg:py-24">
+      {/* Decorative Elements */}
+      <div className="absolute top-10 left-10 animate-float">
+        <ChartBarIcon className="w-10 h-10 text-purple-400 opacity-60" />
       </div>
-      <div className="absolute bottom-10 right-10 animate-ping">
-        <ChartBarIcon className="w-6 h-6 text-purple-400 opacity-50" />
+      <div className="absolute bottom-12 right-12 animate-pulse-slow">
+        <ShieldCheckIcon className="w-8 h-8 text-purple-500 opacity-40" />
       </div>
+      <div className="absolute top-1/3 right-20 w-32 h-32 rounded-full bg-purple-100 opacity-20 blur-xl"></div>
 
-      {/* Main Content */}
-      <motion.header
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+      {/* Illustration Section */}
+      <motion.div
+        className="flex-1 max-w-md lg:max-w-xl mb-12 md:mb-0 md:pr-8 lg:pr-12"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="flex flex-col items-center justify-center text-center px-4 py-10 max-w-2xl"
       >
-        <h2 className="mb-3 text-xl font-bold text-gray-800 dark:text-white md:text-3xl tracking-tight text-center">
-          Gestion des rapports
-        </h2>
+        <div className="relative">
+          <div className="absolute -inset-4 bg-purple-200 rounded-2xl opacity-20 blur-lg"></div>
+          <img
+            src="At the office.gif"
+            alt="Illustration de gestion de rapports"
+            className="relative w-full h-auto rounded-2xl shadow-xl border-4 border-white"
+          />
+        </div>
+      </motion.div>
 
-        <motion.p
+      {/* Content Section */}
+      <motion.div
+        className="flex-1 flex flex-col items-center md:items-start text-center md:text-left max-w-md lg:max-w-xl"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+      >
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
-          className="mb-6 text-base text-gray-700 dark:text-gray-300 md:text-lg"
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
-          Générez, consultez et gérez des rapports détaillés sur vos formations,
-          apprenants et indicateurs clés. Visualisez les performances, suivez
-          les évolutions et exportez les données essentielles pour piloter vos
-          actions pédagogiques avec précision.
-        </motion.p>
+          <h2 className="mb-6 text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
+            Optimisez votre gestion <span className="text-purple-600">de rapports</span>
+          </h2>
 
-        <Link
-          to="/login"
-          className="px-6 py-2 text-sm font-medium text-white bg-[#A462A4] rounded-full shadow-md hover:bg-[#8f4d90] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95"
-        >
-          Accéder au reporting
-        </Link>
-      </motion.header>
+          <p className="mb-8 text-lg md:text-xl text-gray-600 leading-relaxed">
+            Générez, consultez et gérez des rapports détaillés sur vos formations,
+            apprenants et indicateurs clés. Visualisez les performances, suivez
+            les évolutions et exportez les données essentielles pour piloter vos
+            actions pédagogiques avec précision.
+          </p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <Link
+              to="/login"
+              className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:from-purple-600 hover:to-purple-700 group"
+            >
+              Accéder au reporting
+              <ArrowRightIcon className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

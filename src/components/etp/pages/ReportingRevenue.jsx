@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../utils/api";
+import { UserContext } from "../../context/UserContext";
+import { formatMontant } from "../../utils/formatMontant";
 
 // Composant de carte métrique optimisé
 const MetricCard = ({
@@ -125,6 +127,27 @@ const ReportingRevenue = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedYear, setSelectedYear] = useState("current");
+
+  const { setting } = useContext(UserContext);
+
+  useEffect(() => {
+    if (!setting) {
+      console.warn("Setting n'est pas encore chargé");
+    } else {
+      console.log("Setting chargé:", setting);
+    }
+  }, [setting]);
+
+  const currency = setting?.currency_code || "XOF";
+  const [state, setState] = useState({
+    customerInput: "",
+    customerList: [],
+    filteredCustomers: [],
+    selectedCustomer: null,
+    reportingData: null,
+    loading: false,
+    error: null,
+  });
 
   const getCurrentYear = useCallback(() => new Date().getFullYear(), []);
   const getPreviousYear = useCallback(
@@ -341,13 +364,13 @@ const ReportingRevenue = () => {
                 },
                 {
                   title: "Coût total",
-                  value: formatCurrency(displayData.total_YTD),
+                  value: formatMontant(displayData.total_YTD, currency),
                   icon: CurrencyEuroIcon,
                   color: "blue",
                 },
                 {
                   title: "Coût par employé",
-                  value: formatCurrency(displayData.cost_by_employee),
+                  value: formatMontant(displayData.cost_by_employee, currency),
                   icon: CashIcon,
                   color: "pink",
                 },
@@ -418,17 +441,20 @@ const ReportingRevenue = () => {
                           {month}
                         </td>
                         <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700 text-right">
-                          {formatCurrency(
-                            displayData.monthly_finished?.[index] || 0
+                          {formatMontant(
+                            displayData.monthly_finished?.[index],
+                            currency || 0
                           )}
                         </td>
                         <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700 text-right">
                           {displayData.monthly_forecast?.[index] === "null"
-                            ? "0 MGA"
-                            : formatCurrency(
-                                displayData.monthly_forecast[index] || 0
+                            ? `0 ${currency}`
+                            : formatMontant(
+                                displayData.monthly_forecast[index],
+                                currency || "XOF"
                               )}
                         </td>
+
                         <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700 text-right">
                           {displayData.monthly_students[index] || 0} apprenants
                         </td>

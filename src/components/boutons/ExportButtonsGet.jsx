@@ -13,72 +13,79 @@ const ExportButtonsGet = ({
   labelPdf = 'PDF',
 }) => {
 
-  const downloadFile = async (endpoint, defaultFilename) => {
-    try {
-      const config = {
-        responseType: 'blob',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        withCredentials: true,
-        params: queryParams // Utilisation des paramètres de requête
-      };
+const downloadFile = async (endpoint, defaultFilename) => {
+  try {
+    console.log(`Tentative de téléchargement depuis: ${endpoint}`);
+    
+    const config = {
+      responseType: 'blob',
+      headers: {
+        'Accept': 'application/pdf', // Spécifique pour PDF
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      withCredentials: true,
+      params: queryParams
+    };
 
-      const response = await api.get(endpoint, config);
+    console.log('Configuration de la requête:', config);
 
-      // Récupération du nom de fichier depuis le header
-      let filename = defaultFilename;
-      const disposition = response.headers['content-disposition'];
-      if (disposition) {
-        const match = disposition.match(/filename="?(.+?)"?$/);
-        if (match) filename = match[1];
-      }
+    const response = await api.get(endpoint, config);
+    console.log('Réponse reçue, headers:', response.headers);
 
-      const blob = new Blob([response.data]);
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(downloadUrl);
-      }, 100);
-
-    } catch (error) {
-      let errorMessage = "Export failed";
-
-      if (error.response) {
-        try {
-          const errorText = await error.response.data.text();
-          try {
-            const errorJson = JSON.parse(errorText);
-            errorMessage = errorJson.error || errorJson.message || errorMessage;
-          } catch {
-            errorMessage = errorText.includes('<!DOCTYPE html>')
-              ? "Server error occurred"
-              : errorText;
-          }
-        } catch (e) {
-          console.error('Error parsing error response:', e);
-        }
-
-        console.error('Export error:', {
-          status: error.response.status,
-          config: error.config,
-          request: error.request
-        });
-
-      } else {
-        errorMessage = error.message || errorMessage;
-        console.error('Network error:', error);
-      }
-
-      onError(errorMessage);
+    // Vérification du type de contenu
+    const contentType = response.headers['content-type'];
+    console.log('Content-Type:', contentType);
+    
+    if (!contentType.includes('application/pdf')) {
+      console.warn('Le serveur n\'a pas retourné un PDF! Type reçu:', contentType);
+      throw new Error('Le serveur n\'a pas retourné un document PDF valide');
     }
-  };
+
+    // Récupération du nom de fichier
+    let filename = defaultFilename;
+    const disposition = response.headers['content-disposition'];
+    if (disposition) {
+      const match = disposition.match(/filename="?(.+?)"?$/);
+      if (match) filename = match[1];
+    }
+    console.log('Nom de fichier déterminé:', filename);
+
+    // Création du blob
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    console.log('Blob créé:', blob);
+
+    const downloadUrl = window.URL.createObjectURL(blob);
+    console.log('URL de téléchargement créée:', downloadUrl);
+
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+      console.log('Nettoyage effectué');
+    }, 100);
+
+  } catch (error) {
+    console.error('Erreur complète:', error);
+    
+    let errorDetails = {
+      message: error.message,
+      stack: error.stack,
+      response: error.response ? {
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers
+      } : null
+    };
+    
+    console.error('Détails de l\'erreur:', errorDetails);
+    onError(error.message || "Échec du téléchargement du PDF");
+  }
+};
 
   return (
     <div className={`flex flex-wrap justify-center gap-2 my-5 ${className}`}>

@@ -52,7 +52,7 @@ const LoginForm = () => {
             alt="Logo"
             className="w-24 h-24 mt-2 animate-pulse"
           />
-          <h1 className="text-2xl font-extrabold text-[#A462A4] mt-4">
+          <h1 className="text-2xl font-extrabold text-purple-600 mt-4">
             Connectez-vous
           </h1>
         </motion.div>
@@ -85,7 +85,7 @@ const LoginForm = () => {
 
           <motion.button
             type="submit"
-            className="cursor-pointer w-full bg-[#A462A4] text-white font-semibold py-2 rounded-lg hover:bg-[#924b92] transition duration-300 flex items-center justify-center gap-2 shadow-md"
+            className="cursor-pointer w-full bg-purple-700 text-white font-semibold py-2 rounded-lg hover:bg-[#924b92] transition duration-300 flex items-center justify-center gap-2 shadow-md"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             initial={{ opacity: 0, y: 10 }}

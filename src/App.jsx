@@ -11,8 +11,8 @@ import { Import, User } from "lucide-react";
 import { AuthProvider } from "./components/context/AuthContext";
 import { UserProvider } from "./components/context/UserContext";
 import FormationReport from "./components/cfp/pages/FormationReport";
-import ApprenantFormationTimeline  from "./components/cfp/pages/ApprenantFormationTimeline ";
-import CustomerReporting  from "./components/cfp/pages/CustomerReporting";
+import ApprenantFormationTimeline from "./components/cfp/pages/ApprenantFormationTimeline ";
+import CustomerReporting from "./components/cfp/pages/CustomerReporting";
 import ProjectReporting from "./components/cfp/pages/ProjectReporting ";
 import RevenueByProject from "./components/cfp/pages/RevenueByProject ";
 import RevenueByCourse from "./components/cfp/pages/RevenueByCourse";
@@ -27,6 +27,8 @@ import CentreFormationReport from "./components/etp/pages/CentreFormationReport 
 import CoursReporting from "./components/etp/pages/CoursReporting";
 import ReportingRevenue from "./components/etp/pages/ReportingRevenue";
 import Footer from "./components/footer/Footer";
+import FormationDetail from "./components/cfp/pages/FormationDetail ";
+import ProjectDetail from "./components/cfp/pages/ProjectDetail";
 
 const App = () => {
   return (
@@ -53,9 +55,12 @@ const App = () => {
               <Route path="/reporting/revenuebycity" element={<RevenueByCity />} />
               <Route path="/home-etp" element={<FormationReportEtp />} />
               <Route path="/reporting/employe" element={<ReportingEmploye />} />
-              <Route path="/reporting/cfpetp" element={<CentreFormationReport  />} />
-              <Route path="/reporting/coursEtp" element={<CoursReporting  />} />
-              <Route path="/reporting/revenue" element={<ReportingRevenue  />} />
+              <Route path="/reporting/cfpetp" element={<CentreFormationReport />} />
+              <Route path="/reporting/coursEtp" element={<CoursReporting />} />
+              <Route path="/reporting/revenue" element={<ReportingRevenue />} />
+              {/* La route pour FormationDetail : maintenant le composant gère useParams */}
+              <Route path="/reporting/learnerProjet/:idModule/:idProjet" element={<FormationDetail />} />
+              <Route path="/reporting/project/detail/:idProjet" element={<ProjectDetail />} />
             </Routes>
             <Footer />
           </Router>

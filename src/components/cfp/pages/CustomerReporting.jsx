@@ -1,8 +1,21 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback,useContext  } from "react";
 import PropTypes from "prop-types"; // Keep PropTypes if you intend to use them
 import api from "../../utils/api"; // Assuming this is correctly configured for your API
+import { UserContext } from "../../context/UserContext"; // Assurez-vous que ce chemin est correct
+import { formatMontant } from "../../utils/formatMontant";
 
 const CustomerReporting = () => {
+  const { setting } = useContext(UserContext);
+
+useEffect(() => {
+  if (!setting) {
+    console.warn("Setting n'est pas encore chargé");
+  } else {
+    console.log("Setting chargé:", setting);
+  }
+}, [setting]);
+
+const currency = setting?.currency_code || "XOF";
   const [state, setState] = useState({
     customerInput: "",
     customerList: [],
@@ -152,18 +165,18 @@ const CustomerReporting = () => {
     fetchReportingData(customer.customerName);
   };
 
-  const formatCurrency = (amount) => {
-    const numericAmount =
-      typeof amount === "string" ? parseFloat(amount) : amount;
-    if (isNaN(numericAmount)) return amount;
+  // const formatCurrency = (amount) => {
+  //   const numericAmount =
+  //     typeof amount === "string" ? parseFloat(amount) : amount;
+  //   if (isNaN(numericAmount)) return amount;
 
-    return new Intl.NumberFormat("fr-MG", {
-      style: "currency",
-      currency: "MGA",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(numericAmount);
-  };
+  //   return new Intl.NumberFormat("fr-MG", {
+  //     style: "currency",
+  //     currency: "MGA",
+  //     minimumFractionDigits: 0,
+  //     maximumFractionDigits: 2,
+  //   }).format(numericAmount);
+  // };
 
   const renderCARows = () => {
     if (
@@ -190,13 +203,13 @@ const CustomerReporting = () => {
           return (
             <td key={`${yearData.year}-${monthName}`} className="p-3">
               {monthData
-                ? formatCurrency(monthData.total_ttc)
-                : formatCurrency(0)}
+                ? formatMontant(monthData.total_ttc,currency)
+                : formatMontant(0)}
             </td>
           );
         })}
         <td className="p-3 font-semibold">
-          {yearData.total ? formatCurrency(yearData.total) : formatCurrency(0)}
+          {yearData.total ? formatMontant(yearData.total,currency) : formatMontant(0)}
         </td>
       </tr>
     ));
@@ -252,7 +265,7 @@ const CustomerReporting = () => {
             Recherchez un client pour afficher son rapports de formation
           </p>
         </div>
-      <div className="relative">
+      <div className="relative w-190 mx-auto">
         <form
           onSubmit={handleFormSubmit}
           className="flex flex-col sm:flex-row gap-4"
@@ -527,7 +540,8 @@ const CustomerReporting = () => {
                               {project.project_type}
                             </td>
                             <td className="px-3 py-4 whitespace-nowrap">
-                              {formatCurrency(project.total_ttc)}
+                              {formatMontant(project.total_ttc,currency)}
+                           
                             </td>
                             <td className="px-3 py-4 whitespace-nowrap">
                               {project.dateDebut}
