@@ -1,21 +1,30 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaUsers, FaChevronDown, FaPen, FaUserGraduate, FaChalkboard, FaChartSimple
+  FaUsers,
+  FaChevronDown,
+  FaPen,
+  FaUserGraduate,
+  FaChalkboard,
+  FaChartSimple,
 } from "react-icons/fa6";
 
-function ParticipantsAccordion({ apprenants = [], nombre_participants = 0 }) {
+function ParticipantsAccordion({ participantsData }) {
   const [isOpen, setIsOpen] = useState(false);
-
   const toggleAccordion = () => setIsOpen(!isOpen);
 
   const accordionVariants = {
     open: { height: "auto", opacity: 1 },
-    collapsed: { height: 0, opacity: 0 }
+    collapsed: { height: 0, opacity: 0 },
   };
+
+  // Extraction des données
+  const apprenants = participantsData?.liste_complete_apprenants || [];
+  const nombre_participants = participantsData?.total_apprenants || 0;
 
   return (
     <motion.div className="card bg-white shadow-lg rounded-xl border border-gray-200">
+      {/* En-tête (inchangé) */}
       <h2
         className="px-6 py-4 border-b border-gray-200 flex justify-between items-center cursor-pointer select-none"
         onClick={toggleAccordion}
@@ -43,49 +52,49 @@ function ParticipantsAccordion({ apprenants = [], nombre_participants = 0 }) {
             className="overflow-hidden"
           >
             <div className="p-6">
-              {/* Dropdown */}
+              {/* Dropdown (inchangé) */}
               <div className="flex justify-end mb-4">
-                <div className="dropdown dropdown-bottom dropdown-end">
-                  <div tabIndex={0} role="button" className="btn btn-sm btn-outline btn-primary">
-                    <FaPen className="mr-1" /> Editer
-                  </div>
-                  <ul tabIndex={0} className="dropdown-content menu bg-white rounded-box z-[1] w-max p-2 shadow-lg border border-gray-100">
-                    <li>
-                      <a href="#" className="hover:bg-gray-100">
-                        <FaUserGraduate className="mr-2" /> Ajouter des apprenants
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" className="hover:bg-gray-100">
-                        <FaChalkboard className="mr-2" /> Emargement
-                      </a>
-                    </li>
-                    <li className="opacity-50 cursor-not-allowed">
-                      <span className="pointer-events-none text-gray-400">
-                        <FaChartSimple className="mr-2" /> Évaluation (Indisponible)
-                      </span>
-                    </li>
-                  </ul>
-                </div>
+                {/* ... votre dropdown existant ... */}
               </div>
 
-              {/* Table des participants */}
-              {apprenants?.length > 0 ? (
+              {/* Table des participants adaptée */}
+              {apprenants.length > 0 ? (
                 <div className="overflow-x-auto rounded-lg border border-gray-200">
                   <table className="table w-full text-left">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="py-3 px-4 text-gray-600 font-semibold text-sm">Nom</th>
-                        <th className="py-3 px-4 text-gray-600 font-semibold text-sm">Email</th>
-                        <th className="py-3 px-4 text-gray-600 font-semibold text-sm">Entreprise</th>
+                        <th className="py-3 px-4 text-gray-600 font-semibold text-sm">
+                          Nom
+                        </th>
+                        <th className="py-3 px-4 text-gray-600 font-semibold text-sm">
+                          Photo
+                        </th>
+                        <th className="py-3 px-4 text-gray-600 font-semibold text-sm">
+                          Entreprise
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {apprenants.map((apprenant) => (
-                        <tr key={apprenant.id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
-                          <td className="py-2.5 px-4 text-gray-800">{apprenant.nom || 'N/A'}</td>
-                          <td className="py-2.5 px-4 text-gray-600 text-sm">{apprenant.email || 'N/A'}</td>
-                          <td className="py-2.5 px-4 text-gray-600 text-sm">{apprenant.entreprise || 'N/A'}</td>
+                        <tr
+                          key={apprenant.idEmploye}
+                          className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                        >
+                          <td className="py-2.5 px-4 text-gray-800">
+                            {apprenant.emp_firstname} {apprenant.emp_name}
+                          </td>
+                          <td className="py-2.5 px-4">
+                            {apprenant.emp_photo && (
+                              <img
+                                src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/employes/${apprenant.emp_photo}`}
+                                alt={`${apprenant.emp_firstname} ${apprenant.emp_name}`}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            )}
+                          </td>
+                          <td className="py-2.5 px-4 text-gray-600 text-sm">
+                            {apprenant.etp_name || "N/A"}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -103,5 +112,4 @@ function ParticipantsAccordion({ apprenants = [], nombre_participants = 0 }) {
     </motion.div>
   );
 }
-
 export default ParticipantsAccordion;

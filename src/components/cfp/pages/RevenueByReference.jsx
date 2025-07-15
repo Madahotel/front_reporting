@@ -77,7 +77,7 @@ const RevenueByReference = () => {
           cost: parseFloat(project.total_ttc),
           start: project.dateDebut,
           end: project.dateFin,
-          detail: `https://projets.forma-fusion.com`,
+          detail: `https://projets.forma-fusion.com/cfp/projets/${project.idProjet}/detail`,
           percentage: parseFloat(project.percentage), // <-- ADDED THIS LINE
         })),
       }));

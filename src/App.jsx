@@ -29,6 +29,7 @@ import ReportingRevenue from "./components/etp/pages/ReportingRevenue";
 import Footer from "./components/footer/Footer";
 import FormationDetail from "./components/cfp/pages/FormationDetail ";
 import ProjectDetail from "./components/cfp/pages/ProjectDetail";
+import FormafusionSignup from "./component/FormafusionSignup";
 
 const App = () => {
   return (
@@ -41,7 +42,7 @@ const App = () => {
               <Route path="/" element={<HomeSection />} />
               <Route path="/login" element={<LoginForm />} />
               <Route path="/login/user" element={<LoginUser />} />
-              <Route path="/register" element={<RegisterForm />} />
+              <Route path="/register" element={<FormafusionSignup />} />
               <Route path="/home-cfp" element={<FormationReport />} />
               <Route path="/reporting/apprenant" element={<ApprenantFormationTimeline />} />
               <Route path="/reporting/client" element={<CustomerReporting />} />

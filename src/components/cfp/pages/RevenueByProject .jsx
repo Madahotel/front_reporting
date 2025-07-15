@@ -224,8 +224,9 @@ const RevenueByProject = () => {
                       <td className="px-4 py-3 text-right text-sm text-gray-800">{project.pourcentage}</td>
                       <td className="px-4 py-3 text-center text-sm">
  <Link
-  to={`/reporting/project/detail/${project.idProjet}`} 
+  to={`https://projets.forma-fusion.com/cfp/projets/${project.id}/detail`} 
   className="text-[#A462A4] hover:text-[#A462A4b9]"
+   target="_blank"
 >
   <i className="fa-solid fa-eye"></i>
 </Link>

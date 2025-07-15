@@ -72,7 +72,7 @@ const RevenueByCity = () => {
             total_ttc: parseFloat(project.totalTtc),
             start: '',
             end: '',
-            detail: `https://projets.forma-fusion.com`,
+            detail: `https://projets.forma-fusion.com/cfp/projets/${city.idVille}/detail`,
             percentage: parseFloat(project.percentage),
           })),
         }));

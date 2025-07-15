@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useMemo,useContext } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import api from "../../utils/api";
 import { UserContext } from "../../context/UserContext";
 import { formatMontant } from "../../utils/formatMontant";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowDown,
-  faEye,
-  faSort,
-} from "@fortawesome/free-solid-svg-icons";
+import { faArrowDown, faEye, faSort } from "@fortawesome/free-solid-svg-icons";
 import { motion, AnimatePresence } from "framer-motion";
 
 const RevenueByClient = () => {
@@ -23,26 +19,26 @@ const RevenueByClient = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-     const { setting } = useContext(UserContext);
-      
-        useEffect(() => {
-          if (!setting) {
-            console.warn("Setting n'est pas encore chargé");
-          } else {
-            console.log("Setting chargé:", setting);
-          }
-        }, [setting]);
-      
-        const currency = setting?.currency_code || "XOF";
-        const [state, setState] = useState({
-          customerInput: "",
-          customerList: [],
-          filteredCustomers: [],
-          selectedCustomer: null,
-          reportingData: null,
-          loading: false,
-          error: null,
-        });
+  const { setting } = useContext(UserContext);
+
+  useEffect(() => {
+    if (!setting) {
+      console.warn("Setting n'est pas encore chargé");
+    } else {
+      console.log("Setting chargé:", setting);
+    }
+  }, [setting]);
+
+  const currency = setting?.currency_code || "XOF";
+  const [state, setState] = useState({
+    customerInput: "",
+    customerList: [],
+    filteredCustomers: [],
+    selectedCustomer: null,
+    reportingData: null,
+    loading: false,
+    error: null,
+  });
 
   const years = useMemo(() => {
     const yearsArray = [];
@@ -73,7 +69,7 @@ const RevenueByClient = () => {
           cost: parseFloat(project.total_ttc),
           start: project.date_debut,
           end: project.date_fin,
-          detail: `https://projets.forma-fusion.com`,
+          detail: `https://projets.forma-fusion.com/cfp/projets/${project.idProjet}/detail`,
           percentage: parseFloat(project.percentage),
         })),
       }));
@@ -384,7 +380,6 @@ const RevenueByClient = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sortedCustomers.map((customer, index) => (
                       <React.Fragment key={customer.idCustomer}>
-
                         <motion.tr
                           variants={itemVariants}
                           className={`transition-colors duration-200 ${
@@ -403,7 +398,7 @@ const RevenueByClient = () => {
                             {customer.count_project || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatMontant(customer.total_ttc,currency)}
+                            {formatMontant(customer.total_ttc, currency)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             {customer.percentage?.toFixed(2) || "0.00"} %
@@ -506,7 +501,8 @@ const RevenueByClient = () => {
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                                                 {formatMontant(
-                                                  project.total_ttc,currency
+                                                  project.total_ttc,
+                                                  currency
                                                 )}{" "}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
@@ -555,7 +551,7 @@ const RevenueByClient = () => {
                         {data.totalProjects}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
-                        {formatMontant(data.total_price,currency)}
+                        {formatMontant(data.total_price, currency)}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
                         100 %

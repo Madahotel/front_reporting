@@ -75,7 +75,7 @@ const RevenueByFolder = () => {
           cost: parseFloat(project.total_ttc),
           start: project.dateDebut,
           end: project.dateFin,
-          detail: ` https://projets.forma-fusion.com`,
+          detail: ` https://projets.forma-fusion.com/cfp/projets/${folder.id}/detail`,
           
           percentage: parseFloat(project.percentage), // <-- ADDED THIS LINE
         })),

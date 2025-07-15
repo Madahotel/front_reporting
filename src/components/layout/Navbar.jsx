@@ -16,6 +16,7 @@ import LogoutConfirmationModal from "./LogoutConfirmationModal";
 // import appLinksData from "./AppLinksData"; // <<< REMOVE THIS LINE
 import { getPhotoUrl, preloadImage } from "../utils/imageUtils";
 import api from "../utils/api"; // Import your API utility
+import HeaderWithBeta from "./HeaderWithBeta";
 
 const PROFILE_BASE_PATH =
   "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/referents/";
@@ -260,7 +261,7 @@ const Navbar = () => {
       ];
     } else {
       console.log("⛔️ Aucune navigation affichée pour ce rôle");
-      return [];
+      return []; // Return empty as "Vos retours" will be added conditionally in JSX
     }
   }, [user]);
 
@@ -329,9 +330,7 @@ const Navbar = () => {
                   alt="Reporting Icon"
                   className="w-9 mb-1"
                 />
-                <p className="text-2xl font-semibold text-gray-700">
-                  Reporting
-                </p>
+                <HeaderWithBeta />
               </Link>
             </div>
 
@@ -408,6 +407,24 @@ const Navbar = () => {
                             ))}
                           </div>
                         )}
+
+                        {/* --- DEPLACER "Vos retours" APRES "Chiffre d'affaire" POUR MOBILE --- */}
+                        {(user?.role_id === 3 ||
+                          user?.role_id === 8 ||
+                          user?.role_id === 6) && (
+                          <Link
+                            to="/reporting/feedback"
+                            className={`block px-4 py-3 text-sm ${
+                              isNavLinkActive("/reporting/feedback")
+                                ? "bg-[#87388C] text-white"
+                                : "text-slate-700 hover:bg-gray-100"
+                            }`}
+                            onClick={toggleMobileMenu}
+                          >
+                            Vos retours
+                          </Link>
+                        )}
+                        {/* --- FIN DEPLACEMENT "Vos retours" --- */}
                       </div>
                     </>
                   ) : (
@@ -498,12 +515,31 @@ const Navbar = () => {
                       </ul>
                     )}
                   </li>
+
+                  {/* --- DEPLACER "Vos retours" APRES "Chiffre d'affaire" POUR DESKTOP --- */}
+                  {(user?.role_id === 3 ||
+                    user?.role_id === 8 ||
+                    user?.role_id === 6) && (
+                    <li>
+                      <Link
+                        to="/reporting/feedback"
+                        className={`capitalize px-3 py-2 rounded-t-md text-slate-600 hover:text-slate-500 ${
+                          isNavLinkActive("/reporting/feedback")
+                            ? "bg-purple-500 text-white border-b-2 border-purple-200"
+                            : ""
+                        }`}
+                        onClick={() => closeAllDropdownsExcept()}
+                      >
+                        Contactez-nous
+                      </Link>
+                    </li>
+                  )}
+                  {/* --- FIN DEPLACEMENT "Vos retours" --- */}
                 </ul>
               ) : (
                 <div className="flex-grow"></div>
               )}
             </div>
-
             <div className="flex items-center space-x-4">
               {isAuthenticated && (
                 <div className="relative" ref={notificationsRef}>
@@ -547,7 +583,6 @@ const Navbar = () => {
                   )}
                 </div>
               )}
-
               <div className="relative" ref={appsDropdownRef}>
                 <button
                   onClick={toggleAppsDropdown}

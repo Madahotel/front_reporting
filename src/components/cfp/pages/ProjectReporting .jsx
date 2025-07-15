@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import api from "../../utils/api";
 import { UserContext } from "../../context/UserContext";
 import { formatMontant } from "../../utils/formatMontant";
-import { useParams, Link } from 'react-router-dom'; // Add Link here
+// import { useParams, Link } from "react-router-dom";
 
 const ProjectReporting = () => {
   const [modules, setModules] = useState([]);
@@ -276,12 +276,14 @@ const ProjectReporting = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {project.lieu}
                               </td>
- <Link
-  to={`/reporting/project/detail/${project.idProjet}`} // Use template literal to inject idProjet
-  className="text-[#A462A4] hover:text-[#A462A4b9]"
->
-  <i className="fa-solid fa-eye"></i>
-</Link>
+                              <a
+                                href={`https://projets.forma-fusion.com/cfp/projets/${project.idProjet}/detail`}
+                                className="text-[#A462A4] hover:text-[#A462A4b9]"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <i className="fa-solid fa-eye"></i>
+                              </a>
                             </tr>
                           ))}
                         </tbody>

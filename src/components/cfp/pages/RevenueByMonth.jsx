@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo,useContext } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import api from "../../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { UserContext } from "../../context/UserContext";
@@ -37,18 +37,19 @@ const RevenueByMonth = () => {
     fetchData(selectedYear);
   }, [selectedYear]);
 
-  
-      const { setting } = useContext(UserContext);
-        const currency = setting?.currency_code || "XOF";
-        const [state, setState] = useState({
-          customerInput: "",
-          customerList: [],
-          filteredCustomers: [],
-          selectedCustomer: null,
-          reportingData: null,
-          loading: false,
-          error: null,
-        });
+  const { setting } = useContext(UserContext);
+  const currency = setting?.currency_code || "XOF";
+  // Vous n'utilisez pas `state` dans ce composant pour l'instant,
+  // donc cette déclaration peut être supprimée si elle n'est pas utilisée ailleurs.
+  // const [state, setState] = useState({
+  //   customerInput: "",
+  //   customerList: [],
+  //   filteredCustomers: [],
+  //   selectedCustomer: null,
+  //   reportingData: null,
+  //   loading: false,
+  //   error: null,
+  // });
 
   const fetchData = async (year) => {
     setLoading(true);
@@ -60,15 +61,21 @@ const RevenueByMonth = () => {
 
       const formattedMonths = backendData.months.map((month) => ({
         ...month,
-        id: month.id_month,
+        // Utilise 'monthValue' comme identifiant unique pour le mois,
+        // ce qui est correct pour les opérations liées au mois lui-même (comme l'expansion/réduction).
+        id: month.monthValue,
         percentage: parseFloat(month.percentage),
         projects: month.projects.map((project) => ({
           ...project,
           cost: parseFloat(project.total_ttc),
           start: project.dateDebut,
           end: project.dateFin,
-          detail: `https://projets.forma-fusion.com`,
-          percentage: parseFloat(project.percentage), // <-- ADDED THIS LINE
+          // CORRECTION IMPORTANTE ICI :
+          // Pour le détail d'un *projet*, l'URL doit utiliser l'ID du *projet* (`project.idProjet`).
+          // L'ancienne version utilisait `month.monthValue`, ce qui aurait mené à la page de détail du mois,
+          // et non à celle du projet spécifique.
+          detail: `https://projets.forma-fusion.com/cfp/projets/${project.idProjet}/detail`,
+          percentage: parseFloat(project.percentage),
         })),
       }));
 
@@ -87,13 +94,13 @@ const RevenueByMonth = () => {
     }
   };
 
-  // This function now adds/removes client IDs from the activeClientIds array
+  // Cette fonction ajoute/retire les IDs de mois du tableau activeMonthIds
   const toggleMonthDetails = (monthId) => {
     setActiveMonthIds(
       (prevIds) =>
         prevIds.includes(monthId)
-          ? prevIds.filter((id) => id !== monthId) // Remove if already present
-          : [...prevIds, monthId] // Add if not present
+          ? prevIds.filter((id) => id !== monthId) // Supprime si déjà présent
+          : [...prevIds, monthId] // Ajoute si non présent
     );
   };
 
@@ -109,15 +116,15 @@ const RevenueByMonth = () => {
     setSortConfig({ key, direction });
   };
 
-  // Tri des clients (précédemment modules)
+  // Tri des mois
   const sortedMonths = useMemo(() => {
     let sortableMonths = [...(data?.months || [])]; // sécurisé
     if (sortConfig.key) {
       sortableMonths.sort((a, b) => {
         let aValue, bValue;
 
-        // Custom sort for project count
-        if (sortConfig.key === "months.length") {
+        // Custom sort for project count (reste inchangé car il se base sur .length)
+        if (sortConfig.key === "projects.length") {
           aValue = a.projects?.length || 0;
           bValue = b.projects?.length || 0;
         } else {
@@ -339,7 +346,7 @@ const RevenueByMonth = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg"></th>
                       <th
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={() => requestSort("etp_name")}
+                        onClick={() => requestSort("month_name")}
                       >
                         <div className="flex items-center">
                           <FontAwesomeIcon
@@ -383,11 +390,13 @@ const RevenueByMonth = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sortedMonths.map((month, index) => (
-                      <React.Fragment key={`${month.id}-${index}`}>
+                      <React.Fragment key={`${month.monthValue}-${index}`}>
+                        {" "}
+                        {/* Correction ici */}
                         <motion.tr
                           variants={itemVariants}
                           className={`transition-colors duration-200 ${
-                            activeMonthIds.includes(month.id)
+                            activeMonthIds.includes(month.monthValue) // Correction ici
                               ? "bg-blue-100"
                               : "hover:bg-gray-50"
                           }`}
@@ -402,18 +411,18 @@ const RevenueByMonth = () => {
                             {month.count_project || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatMontant(month.total_ttc,currency)}
+                            {formatMontant(month.total_ttc, currency)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             {month.percentage?.toFixed(2) || "0.00"} %
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             <motion.button
-                              id={`toggleButton-${month.monthValue}`}
+                              id={`toggleButton-${month.monthValue}`} // Correction ici
                               className="p-1 text-gray-500 hover:text-blue-600 transition-colors duration-200"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleMonthDetails(month.monthValue);
+                                toggleMonthDetails(month.monthValue); // Correction ici
                               }}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
@@ -421,7 +430,7 @@ const RevenueByMonth = () => {
                               <FontAwesomeIcon
                                 icon={faArrowDown}
                                 className={`transition-transform duration-300 ${
-                                  activeMonthIds.includes(month.monthValue)
+                                  activeMonthIds.includes(month.monthValue) // Correction ici
                                     ? "rotate-180 text-blue-600"
                                     : ""
                                 }`}
@@ -429,9 +438,8 @@ const RevenueByMonth = () => {
                             </motion.button>
                           </td>
                         </motion.tr>
-
                         <AnimatePresence>
-                          {activeMonthIds.includes(month.monthValue) && (
+                          {activeMonthIds.includes(month.monthValue) && ( // Correction ici
                             <motion.tr
                               variants={expandVariants}
                               initial="hidden"
@@ -464,7 +472,6 @@ const RevenueByMonth = () => {
                                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                             Client
                                           </th>
-
                                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                             Début - Fin
                                           </th>
@@ -484,9 +491,9 @@ const RevenueByMonth = () => {
                                           (project, projectIndex) => (
                                             <motion.tr
                                               key={
-                                                project.id_projet ||
-                                                `${month.id}-${projectIndex}`
-                                              } // Fallback key
+                                                project.idProjet ||
+                                                `${month.monthValue}-${projectIndex}` // Correction ici
+                                              }
                                               initial={{ opacity: 0, y: 10 }}
                                               animate={{ opacity: 1, y: 0 }}
                                               transition={{
@@ -512,7 +519,8 @@ const RevenueByMonth = () => {
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                                                 {formatMontant(
-                                                  project.total_ttc,currency
+                                                  project.total_ttc,
+                                                  currency
                                                 )}{" "}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">

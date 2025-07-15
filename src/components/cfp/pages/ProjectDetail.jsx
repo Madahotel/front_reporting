@@ -29,8 +29,9 @@ import {
   FaEye,
   FaPlus,
 } from "react-icons/fa6";
-import ParticipantsAccordion from "./ParticipantsAccordion";
-import EntrepriseAccordion from "./EntrepriseAccordion";
+import ParticipantsAccordion from "./accordion/ParticipantsAccordion";
+import EntrepriseAccordion from "./accordion/EntrepriseAccordion";
+import FormateursAccordion from "./accordion/FormateurAccordion";
 
 // --- Image Utility Constants and Functions ---
 const DIGITALOCEAN_MODULES_BASE_URL =
@@ -142,26 +143,26 @@ const ProjectDetail = () => {
     // Add other accordions you want to control here
   });
 
-useEffect(() => {
-  const fetchProject = async () => {
-    try {
-      const response = await api.get(`/cfp/reporting/${idProjet}/detail`);
-      console.log('API Response:', response.data); // Debug log
-      if (response.data && response.data.success) {
-        setProject(response.data.data);
-      } else {
-        setError("Failed to fetch project details.");
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const response = await api.get(`/cfp/reporting/${idProjet}/detail`);
+        console.log("API Response:", response.data); // Debug log
+        if (response.data && response.data.success) {
+          setProject(response.data.data);
+        } else {
+          setError("Failed to fetch project details.");
+        }
+      } catch (err) {
+        console.error("Error fetching project details:", err);
+        setError("Error fetching project details. Please try again.");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Error fetching project details:", err);
-      setError("Error fetching project details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchProject();
-}, [idProjet]);
+    fetchProject();
+  }, [idProjet]);
 
   const toggleAccordion = (id) => {
     setOpenAccordions((prev) => ({
@@ -207,22 +208,22 @@ useEffect(() => {
       </div>
     );
   }
-// Remplacer la déstructuration actuelle par :
-const {
-  projet = {},
-  dates = {},
-  duree = {},
-  participants = { apprenants: [], entreprises: [] },
-  evaluation = { note_moyenne: 0, nombre_participants: 0 },
-  contenu = { seances: [], formateurs: [], programmes: [], modules: [] },
-  logistique = { lieu: {}, restaurations: [] },
-  administratif = { documents: [], dossier: {} },
-  references = { objectifs: [], materiels: [], prerequis: [] },
-  facturation = { devis: [], paiement: {} }
-} = project || {}; // Ajout de || {} au cas où project serait null/undefined
+  // Remplacer la déstructuration actuelle par :
+  const {
+    projet = {},
+    dates = {},
+    duree = {},
+    participants: { apprenants: projectApprenants = [], entreprises = [] } = {}, // Renamed to avoid conflict if `apprenants` is also a direct project prop
+    evaluation = { note_moyenne: 0, nombre_participants: 0 },
+    contenu = { seances: [], formateurs: [], programmes: [], modules: [] },
+    logistique = { lieu: {}, restaurations: [] },
+    administratif = { documents: [], dossier: {} },
+    references = { objectifs: [], materiels: [], prerequis: [] },
+    facturation = { devis: [], paiement: {} },
+    liste_complete_apprenants = [], // Add this line
+    total_apprenants = 0, // Add this line
+  } = project || {};
 
-  // Destructure nested objects with defaults
-  const { apprenants = [], entreprises = [] } = participants;
   const {
     seances = [],
     formateurs = [],
@@ -524,13 +525,16 @@ const {
                   getEtpLogoUrl={getEtpLogoUrl}
                 />
 
-                <ParticipantsAccordion
-                  apprenants={apprenants} // Pass apprenants data
-                  isOpen={openAccordions.participants}
-                  toggleAccordion={() => toggleAccordion("participants")}
-                  accordionVariants={accordionVariants}
-                  itemVariants={itemVariants}
-                />
+                {!loading && project && (
+                  <div className="space-y-4 mt-6">
+                    <ParticipantsAccordion
+                      participantsData={project.participants}
+                    />
+                    <FormateursAccordion
+                      formateursData={project.participants.formateurs}
+                    />
+                  </div>
+                )}
 
                 {/* Documents Accordion */}
                 <motion.div
@@ -606,7 +610,7 @@ const {
                                       className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
                                     >
                                       <td className="py-2.5 px-4 text-gray-800">
-                                        {doc.titre || "N/A"}
+                                        {doc.module_subtitle || "N/A"}
                                       </td>
                                       <td className="py-2.5 px-4 text-gray-600 text-sm">
                                         {doc.section || "N/A"}
@@ -780,7 +784,8 @@ const {
                         <FaUsers className="mr-2 text-blue-300" /> Participants:
                       </span>
                       <span className="text-blue-100 font-bold">
-                        {apprenants.length || 0}
+                        {liste_complete_apprenants.length || 0}{" "}
+                        {/* Changed from apprenants.length */}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-lg border-b border-blue-500 pb-2">
@@ -862,172 +867,209 @@ const {
           </motion.div>
         )}
 
-{/* Détails Tab */}
-{activeTab === "details" && (
-  <motion.div
-    key="details-tab"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.2 }}
-    role="tabpanel"
-    className="tab-content pt-4"
-  >
-    <div className="grid grid-cols-1 gap-6">
-      {/* Modules */}
-      <motion.div className="card bg-white shadow-lg rounded-xl border border-gray-200" variants={itemVariants}>
-        <h2 className="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-gray-800 flex items-center">
-          <FaBoxOpen className="mr-3 text-cyan-600" /> Modules
-        </h2>
-        <div className="p-6">
-          {modules && modules.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>Nom</th>
-                    <th>Description</th>
-                    <th>Durée</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {modules.map((module) => (
-                    <tr key={module.idModule || Math.random()}>
-                      <td>{module.module_name || "N/A"}</td>
-                      <td>{module.module_description || "N/A"}</td>
-                      <td>{module.duree_heures || "N/A"} heures</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Détails Tab */}
+        {activeTab === "details" && (
+          <motion.div
+            key="details-tab"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            role="tabpanel"
+            className="tab-content pt-4"
+          >
+            <div className="grid grid-cols-1 gap-6">
+              {/* Modules */}
+              <motion.div
+                className="card bg-white shadow-lg rounded-xl border border-gray-200"
+                variants={itemVariants}
+              >
+                <h2 className="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-gray-800 flex items-center">
+                  <FaBoxOpen className="mr-3 text-cyan-600" /> Modules
+                </h2>
+                <div className="p-6">
+                  {modules && modules.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="table w-full">
+                        <thead>
+                          <tr>
+                            <th>Nom</th>
+                            <th>Description</th>
+                            <th>Durée</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {modules.map((module) => (
+                            <tr key={module.idModule || Math.random()}>
+                              <td>{module.module_name || "N/A"}</td>
+                              <td>{module.module_description || "N/A"}</td>
+                              <td>{module.duree_heures || "N/A"} heures</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">
+                      Aucun module disponible
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Objectifs */}
+              <motion.div
+                className="card bg-white shadow-lg rounded-xl border border-gray-200"
+                variants={itemVariants}
+              >
+                <h2 className="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-gray-800 flex items-center">
+                  <FaBullseye className="mr-3 text-teal-600" /> Objectifs
+                </h2>
+                <div className="p-6">
+                  {objectifs && objectifs.length > 0 ? (
+                    <ul className="list-disc pl-5 space-y-2">
+                      {objectifs.map((obj, index) => {
+                        // Handle both string and object cases
+                        const text =
+                          typeof obj === "object"
+                            ? obj.objectif ||
+                              obj.idObjectif ||
+                              JSON.stringify(obj)
+                            : obj;
+                        return <li key={index}>{text}</li>;
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 italic">
+                      Aucun objectif défini
+                    </p>
+                  )}
+                </div>
+              </motion.div>
             </div>
-          ) : (
-            <p className="text-gray-500 italic">Aucun module disponible</p>
-          )}
-        </div>
-      </motion.div>
+          </motion.div>
+        )}
 
-      {/* Objectifs */}
-      <motion.div className="card bg-white shadow-lg rounded-xl border border-gray-200" variants={itemVariants}>
-        <h2 className="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-gray-800 flex items-center">
-          <FaBullseye className="mr-3 text-teal-600" /> Objectifs
-        </h2>
-        <div className="p-6">
-          {objectifs && objectifs.length > 0 ? (
-            <ul className="list-disc pl-5 space-y-2">
-              {objectifs.map((obj, index) => {
-                // Handle both string and object cases
-                const text = typeof obj === 'object' 
-                  ? obj.objectif || obj.idObjectif || JSON.stringify(obj) 
-                  : obj;
-                return <li key={index}>{text}</li>;
-              })}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">Aucun objectif défini</p>
-          )}
-        </div>
-      </motion.div>
-    </div>
-  </motion.div>
-)}
+        {/* Facturation Tab */}
+        {activeTab === "facturation" && (
+          <motion.div
+            key="facturation-tab"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            role="tabpanel"
+            className="tab-content pt-4"
+          >
+            <div className="grid grid-cols-1 gap-6">
+              {/* Devis */}
+              <motion.div
+                className="card bg-white shadow-lg rounded-xl border border-gray-200"
+                variants={itemVariants}
+              >
+                <h2 className="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-gray-800 flex items-center">
+                  <FaFilePdf className="mr-3 text-red-600" /> Devis
+                </h2>
+                <div className="p-6">
+                  {devis && devis.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="table w-full">
+                        <thead>
+                          <tr>
+                            <th>Numéro</th>
+                            <th>Date</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {devis.map((item) => (
+                            <tr key={item.idDevis || Math.random()}>
+                              <td>{item.numero_devis || "N/A"}</td>
+                              <td>{formatDate(item.date_devis)}</td>
+                              <td>{formatCurrency(item.montant_total)}</td>
+                              <td>
+                                <span
+                                  className={`badge ${getPaymentStatusColor(
+                                    item.status_devis
+                                  )}`}
+                                >
+                                  {item.status_devis || "N/A"}
+                                </span>
+                              </td>
+                              <td>
+                                <button className="btn btn-ghost btn-sm">
+                                  <FaEye />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">
+                      Aucun devis disponible
+                    </p>
+                  )}
+                </div>
+              </motion.div>
 
-{/* Facturation Tab */}
-{activeTab === "facturation" && (
-  <motion.div
-    key="facturation-tab"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.2 }}
-    role="tabpanel"
-    className="tab-content pt-4"
-  >
-    <div className="grid grid-cols-1 gap-6">
-      {/* Devis */}
-      <motion.div className="card bg-white shadow-lg rounded-xl border border-gray-200" variants={itemVariants}>
-        <h2 className="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-gray-800 flex items-center">
-          <FaFilePdf className="mr-3 text-red-600" /> Devis
-        </h2>
-        <div className="p-6">
-          {devis && devis.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>Numéro</th>
-                    <th>Date</th>
-                    <th>Montant</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {devis.map((item) => (
-                    <tr key={item.idDevis || Math.random()}>
-                      <td>{item.numero_devis || "N/A"}</td>
-                      <td>{formatDate(item.date_devis)}</td>
-                      <td>{formatCurrency(item.montant_total)}</td>
-                      <td>
-                        <span className={`badge ${getPaymentStatusColor(item.status_devis)}`}>
-                          {item.status_devis || "N/A"}
+              {/* Paiement */}
+              <motion.div
+                className="card bg-white shadow-lg rounded-xl border border-gray-200"
+                variants={itemVariants}
+              >
+                <h2 className="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-gray-800 flex items-center">
+                  <FaDollarSign className="mr-3 text-green-600" /> Paiements
+                </h2>
+                <div className="p-6">
+                  {paiement && Object.keys(paiement).length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span>Statut:</span>
+                        <span
+                          className={`badge ${getPaymentStatusColor(
+                            paiement.status_paiement
+                          )}`}
+                        >
+                          {paiement.status_paiement || "N/A"}
                         </span>
-                      </td>
-                      <td>
-                        <button className="btn btn-ghost btn-sm">
-                          <FaEye />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total dû:</span>
+                        <span>{formatCurrency(paiement.montant_total_du)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Payé:</span>
+                        <span className="text-green-600">
+                          {formatCurrency(paiement.montant_paye)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Reste:</span>
+                        <span className="text-red-600">
+                          {formatCurrency(paiement.solde_restant)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Dernier paiement:</span>
+                        <span>
+                          {formatDate(paiement.date_dernier_paiement)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">
+                      Aucune information de paiement disponible
+                    </p>
+                  )}
+                </div>
+              </motion.div>
             </div>
-          ) : (
-            <p className="text-gray-500 italic">Aucun devis disponible</p>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Paiement */}
-      <motion.div className="card bg-white shadow-lg rounded-xl border border-gray-200" variants={itemVariants}>
-        <h2 className="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-gray-800 flex items-center">
-          <FaDollarSign className="mr-3 text-green-600" /> Paiements
-        </h2>
-        <div className="p-6">
-          {paiement && Object.keys(paiement).length > 0 ? (
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span>Statut:</span>
-                <span className={`badge ${getPaymentStatusColor(paiement.status_paiement)}`}>
-                  {paiement.status_paiement || "N/A"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Total dû:</span>
-                <span>{formatCurrency(paiement.montant_total_du)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Payé:</span>
-                <span className="text-green-600">{formatCurrency(paiement.montant_paye)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Reste:</span>
-                <span className="text-red-600">{formatCurrency(paiement.solde_restant)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Dernier paiement:</span>
-                <span>{formatDate(paiement.date_dernier_paiement)}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500 italic">Aucune information de paiement disponible</p>
-          )}
-        </div>
-      </motion.div>
-    </div>
-  </motion.div>
-)}
+          </motion.div>
+        )}
       </AnimatePresence>
     </motion.div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo,useContext } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import api from "../../utils/api";
 import { UserContext } from "../../context/UserContext";
 import { formatMontant } from "../../utils/formatMontant";
@@ -36,27 +36,26 @@ const RevenueByCourse = () => {
     fetchData(selectedYear);
   }, [selectedYear]);
 
+  const { setting } = useContext(UserContext);
 
-    const { setting } = useContext(UserContext);
-    
-      useEffect(() => {
-        if (!setting) {
-          console.warn("Setting n'est pas encore chargé");
-        } else {
-          console.log("Setting chargé:", setting);
-        }
-      }, [setting]);
-    
-      const currency = setting?.currency_code || "XOF";
-      const [state, setState] = useState({
-        customerInput: "",
-        customerList: [],
-        filteredCustomers: [],
-        selectedCustomer: null,
-        reportingData: null,
-        loading: false,
-        error: null,
-      });
+  useEffect(() => {
+    if (!setting) {
+      console.warn("Setting n'est pas encore chargé");
+    } else {
+      console.log("Setting chargé:", setting);
+    }
+  }, [setting]);
+
+  const currency = setting?.currency_code || "XOF";
+  const [state, setState] = useState({
+    customerInput: "",
+    customerList: [],
+    filteredCustomers: [],
+    selectedCustomer: null,
+    reportingData: null,
+    loading: false,
+    error: null,
+  });
 
   const fetchData = async (year) => {
     setLoading(true);
@@ -77,8 +76,7 @@ const RevenueByCourse = () => {
           percentage: parseFloat(project.percentage),
           start: project.date_debut,
           end: project.date_fin,
-          detail: `https://projets.forma-fusion.com`,
-         
+          detail: `https://projets.forma-fusion.com/cfp/projets/${project.idProjet}/detail`,
         })),
       }));
 
@@ -297,25 +295,32 @@ const RevenueByCourse = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-          <div className="mt-20 flex flex-col md:flex-row justify-between items-center mb-6">
-            <h1 className="text-xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
-              Chiffre d'affaires par projet
-            </h1>
-            <div className="flex items-center space-x-2">
-              <label htmlFor="yearSelect" className="text-md font-medium text-gray-700">Année:</label>
-              <select
-                id="yearSelect"
-                name="yearSelect"
-                className="w-32 px-3 py-2 text-base font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md appearance-none cursor-pointer focus:border-blue-500 focus:ring-blue-500 focus:outline-none transition duration-200"
-                value={selectedYear}
-                onChange={handleYearChange}
-              >
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+              <div className="mt-20 flex flex-col md:flex-row justify-between items-center mb-6">
+                <h1 className="text-xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
+                  Chiffre d'affaires par projet
+                </h1>
+                <div className="flex items-center space-x-2">
+                  <label
+                    htmlFor="yearSelect"
+                    className="text-md font-medium text-gray-700"
+                  >
+                    Année:
+                  </label>
+                  <select
+                    id="yearSelect"
+                    name="yearSelect"
+                    className="w-32 px-3 py-2 text-base font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md appearance-none cursor-pointer focus:border-blue-500 focus:ring-blue-500 focus:outline-none transition duration-200"
+                    value={selectedYear}
+                    onChange={handleYearChange}
+                  >
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               <motion.div
                 className="overflow-hidden rounded-lg border border-gray-200"
@@ -393,7 +398,7 @@ const RevenueByCourse = () => {
                             {module.projects?.length || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatMontant(module.total_ttc,currency)}
+                            {formatMontant(module.total_ttc, currency)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             {module.percentage?.toFixed(2) || "0.00"} %
@@ -498,7 +503,10 @@ const RevenueByCourse = () => {
                                                 {project.dateFin}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {formatMontant(project.cost,currency)}{" "}
+                                                {formatMontant(
+                                                  project.cost,
+                                                  currency
+                                                )}{" "}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
                                                 {project.percentage?.toFixed(
@@ -512,6 +520,7 @@ const RevenueByCourse = () => {
                                                   className="inline-block p-1 text-blue-600 hover:text-blue-800 transition-colors duration-200"
                                                   whileHover={{ scale: 1.1 }}
                                                   whileTap={{ scale: 0.95 }}
+                                                  target="_blank"
                                                 >
                                                   <FontAwesomeIcon
                                                     icon={faEye}
@@ -544,7 +553,7 @@ const RevenueByCourse = () => {
                         {data.totalProjects}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
-                        {formatMontant(data.total_price,currency)}
+                        {formatMontant(data.total_price, currency)}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
                         100 %

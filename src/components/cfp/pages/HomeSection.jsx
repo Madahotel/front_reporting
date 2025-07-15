@@ -25,7 +25,7 @@ const HomeSection = () => {
         <div className="relative">
           <div className="absolute -inset-4 bg-purple-200 rounded-2xl opacity-20 blur-lg"></div>
           <img
-            src="At the office.gif"
+            src={`${import.meta.env.BASE_URL}At_the_office.gif`}
             alt="Illustration de gestion de rapports"
             className="relative w-full h-auto rounded-2xl shadow-xl border-4 border-white"
           />
