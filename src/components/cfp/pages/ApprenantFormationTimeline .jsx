@@ -13,52 +13,40 @@ const ApprenantFormationTimeline = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchAttemptedWithEmptyInput, setSearchAttemptedWithEmptyInput] = useState(false);
-  const [selectedMatricule, setSelectedMatricule] = useState(null);
 
   const inputRef = useRef(null);
   const DIGITALOCEAN_MODULES_BASE_URL = "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/modules/";
   const DEFAULT_PLACEHOLDER_FILENAME = "placeholder.webp";
 
-  // Fonction améliorée pour gérer les URLs d'images
   const getModuleImageUrl = (filename) => {
     if (!filename || typeof filename !== "string") {
       return `${DIGITALOCEAN_MODULES_BASE_URL}${DEFAULT_PLACEHOLDER_FILENAME}`;
     }
 
     const cleanPath = filename.trim();
-    
-    // Si c'est déjà une URL complète
+
     if (cleanPath.startsWith("http://") || cleanPath.startsWith("https://")) {
       return cleanPath;
     }
-    
-    // Si c'est un chemin relatif
+
     if (cleanPath.includes("..") || cleanPath.startsWith("/") || cleanPath.startsWith("\\")) {
-      console.warn("Chemin d'image potentiellement non sécurisé détecté:", cleanPath);
       return `${DIGITALOCEAN_MODULES_BASE_URL}${DEFAULT_PLACEHOLDER_FILENAME}`;
     }
 
-    // Construire l'URL complète
     const formattedFilename = cleanPath.startsWith("/") ? cleanPath.substring(1) : cleanPath;
     return `${DIGITALOCEAN_MODULES_BASE_URL}${formattedFilename}`;
   };
 
-  // Chargement initial des données
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        const response = await api.get("/cfp/reporting/apprenant");
-        
-        // Vérification approfondie de la structure des données
-        if (!response.data || !Array.isArray(response.data.all_learner)) {
+        const { data: { all_learner = [] } = {} } = await api.get("/cfp/reporting/apprenant");
+        if (!Array.isArray(all_learner)) {
           throw new Error("Structure de données invalide");
         }
 
-        const data = response.data.all_learner || [];
-
-        const enhancedData = data.map((learner) => {
-          // Calcul de la durée en jours si non fourni
+        const enhancedData = all_learner.map((learner) => {
           let durationDays = learner.duration_days;
           if (!durationDays && learner.dateDebut && learner.dateFin) {
             const start = new Date(learner.dateDebut);
@@ -83,14 +71,13 @@ const ApprenantFormationTimeline = () => {
             salle_quartier: learner.salle_quartier || "",
             project_status: learner.project_status || "Statut inconnu",
             project_type: learner.project_type || "Type inconnu",
-            taux_de_presence: learner.taux_de_presence || 0
+            taux_de_presence: learner.taux_de_presence || 0,
           };
         });
 
         setAllInitialLearnerFormations(enhancedData);
         setError(null);
       } catch (err) {
-        console.error("Erreur API:", err);
         setError("Erreur lors du chargement des données. Veuillez réessayer.");
         setAllInitialLearnerFormations([]);
       } finally {
@@ -101,7 +88,6 @@ const ApprenantFormationTimeline = () => {
     fetchAllData();
   }, []);
 
-  // Débounce pour les suggestions
   const debouncedFilterSuggestions = useMemo(
     () =>
       debounce((name) => {
@@ -113,13 +99,14 @@ const ApprenantFormationTimeline = () => {
 
         const lowerCaseName = name.toLowerCase();
         const uniqueLearners = [];
-        const seenEmpMatricules = new Set();
+        const seenEmpIds = new Set();
 
         allInitialLearnerFormations.forEach((learner) => {
           const fullName = `${learner.emp_name || ""} ${learner.emp_firstname || ""}`.toLowerCase();
-          if (!seenEmpMatricules.has(learner.emp_matricule) && fullName.includes(lowerCaseName)) {
-            seenEmpMatricules.add(learner.emp_matricule);
+          if (!seenEmpIds.has(learner.idEmploye) && fullName.includes(lowerCaseName)) {
+            seenEmpIds.add(learner.idEmploye);
             uniqueLearners.push({
+              idEmploye: learner.idEmploye,
               emp_matricule: learner.emp_matricule,
               emp_name: learner.emp_name,
               emp_firstname: learner.emp_firstname,
@@ -134,12 +121,10 @@ const ApprenantFormationTimeline = () => {
     [allInitialLearnerFormations]
   );
 
-  // Gestion des changements de l'input
   const handleInputChange = (e) => {
     const name = e.target.value;
     setApprenantNameInput(name);
-    setSelectedMatricule(null);
-    
+
     if (name.trim() === "") {
       setSuggestedLearners([]);
       setShowSuggestions(false);
@@ -151,32 +136,31 @@ const ApprenantFormationTimeline = () => {
     }
   };
 
-  // Sélection d'un apprenant dans les suggestions
   const handleLearnerSelection = (selectedEmpMatricule, selectedName, selectedFirstname) => {
     setApprenantNameInput(`${selectedName} ${selectedFirstname}`);
     setSuggestedLearners([]);
     setShowSuggestions(false);
     setSearchAttemptedWithEmptyInput(false);
-    setSelectedMatricule(selectedEmpMatricule);
     filterAndDisplayData(selectedEmpMatricule);
   };
 
-  // Soumission du formulaire
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (apprenantNameInput.trim() === "") {
+    const input = apprenantNameInput.trim();
+
+    if (input === "") {
       setSearchAttemptedWithEmptyInput(true);
       setDisplayedLearnerFormations([]);
       setHasSearched(true);
       return;
     }
-    
+
     setSearchAttemptedWithEmptyInput(false);
-    
-    const selectedLearner = suggestedLearners.find(learner => 
-      `${learner.emp_name} ${learner.emp_firstname}` === apprenantNameInput.trim()
+
+    const selectedLearner = suggestedLearners.find(
+      (learner) => `${learner.emp_name} ${learner.emp_firstname}`.trim() === input
     );
-    
+
     if (selectedLearner) {
       filterAndDisplayData(selectedLearner.emp_matricule);
     } else {
@@ -184,12 +168,10 @@ const ApprenantFormationTimeline = () => {
     }
   };
 
-  // Filtrage et affichage des données
   const filterAndDisplayData = (specificMatricule = null) => {
     setLoading(true);
     setError(null);
     const nameToFilter = apprenantNameInput.trim().toLowerCase();
-
     let filteredResults = [];
 
     if (specificMatricule) {
@@ -197,26 +179,14 @@ const ApprenantFormationTimeline = () => {
         (learner) => learner.emp_matricule === specificMatricule
       );
     } else if (nameToFilter) {
-      const nameParts = nameToFilter.split(' ');
-      
+      const nameParts = nameToFilter.split(" ").filter(Boolean);
       filteredResults = allInitialLearnerFormations.filter((learner) => {
-        const fullName = `${learner.emp_name || ''} ${learner.emp_firstname || ''}`.toLowerCase();
-        return nameParts.every(part => fullName.includes(part));
-      });
-
-      const uniqueMatricules = new Set();
-      filteredResults = filteredResults.filter(learner => {
-        if (!uniqueMatricules.has(learner.emp_matricule)) {
-          uniqueMatricules.add(learner.emp_matricule);
-          return true;
-        }
-        return false;
+        const fullName = `${learner.emp_name || ""} ${learner.emp_firstname || ""}`.toLowerCase();
+        return nameParts.every((part) => fullName.includes(part));
       });
     }
 
-    // Trier les résultats par date de début (du plus récent au plus ancien)
     filteredResults.sort((a, b) => new Date(b.dateDebut) - new Date(a.dateDebut));
-
     setDisplayedLearnerFormations(filteredResults);
     setSuggestedLearners([]);
     setShowSuggestions(false);
@@ -224,7 +194,6 @@ const ApprenantFormationTimeline = () => {
     setLoading(false);
   };
 
-  // Gestion du focus/blur pour les suggestions
   const handleFocus = () => {
     if (apprenantNameInput.length > 0 && suggestedLearners.length > 0) {
       setShowSuggestions(true);
@@ -238,9 +207,8 @@ const ApprenantFormationTimeline = () => {
     }, 100);
   };
 
-  // Affichage des étoiles pour la notation
   const renderRating = (rating) => {
-    if (typeof rating !== 'number' || rating < 0) rating = 0;
+    if (typeof rating !== "number" || rating < 0) rating = 0;
     if (rating > 5) rating = 5;
 
     const stars = [];
@@ -259,12 +227,10 @@ const ApprenantFormationTimeline = () => {
     return stars;
   };
 
-  // Formatage des dates
   const formatShortMonth = (dateString) => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "Date invalide";
-      
       const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
       return monthNames[date.getMonth()];
     } catch (e) {
@@ -272,12 +238,11 @@ const ApprenantFormationTimeline = () => {
     }
   };
 
-  // Obtention des apprenants uniques
   const getUniqueLearners = () => {
     const uniqueMatricules = new Set();
-    return displayedLearnerFormations.filter(learner => {
-      if (!uniqueMatricules.has(learner.emp_matricule)) {
-        uniqueMatricules.add(learner.emp_matricule);
+    return displayedLearnerFormations.filter((learner) => {
+      if (!uniqueMatricules.has(learner.idEmploye)) {
+        uniqueMatricules.add(learner.idEmploye);
         return true;
       }
       return false;
@@ -286,7 +251,6 @@ const ApprenantFormationTimeline = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 mt-17">
-      {/* Section de recherche */}
       <div className="max-w-3xl mx-auto mb-8">
         <div className="text-center mb-6">
           <p className="block text-sm font-medium text-gray-700 mb-1">
@@ -313,7 +277,7 @@ const ApprenantFormationTimeline = () => {
                 <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {suggestedLearners.map((learner) => (
                     <li
-                      key={learner.emp_matricule}
+                      key={learner.idEmploye}
                       className="px-4 py-2 cursor-pointer hover:bg-purple-50"
                       onMouseDown={() =>
                         handleLearnerSelection(
@@ -323,7 +287,7 @@ const ApprenantFormationTimeline = () => {
                         )
                       }
                     >
-                      {learner.emp_name} {learner.emp_firstname} (Matricule: {learner.emp_matricule})
+                      {learner.emp_name} {learner.emp_firstname}
                     </li>
                   ))}
                 </ul>
@@ -365,7 +329,6 @@ const ApprenantFormationTimeline = () => {
           </form>
         </div>
 
-        {/* Messages d'état */}
         <div className="mt-3 text-center min-h-6">
           {error && <p className="text-red-500 text-sm">{error}</p>}
           {!loading && searchAttemptedWithEmptyInput && (
@@ -374,14 +337,7 @@ const ApprenantFormationTimeline = () => {
             </p>
           )}
           {!loading && hasSearched && displayedLearnerFormations.length === 0 && !error && !searchAttemptedWithEmptyInput && (
-            <p className="text-gray-500 text-sm">
-              Aucune formation trouvée pour cet apprenant.
-            </p>
-          )}
-          {!loading && hasSearched && getUniqueLearners().length > 1 && (
-            <p className="text-blue-500 text-sm">
-              Plusieurs apprenants correspondent à votre recherche. Veuillez sélectionner un apprenant dans la liste pour afficher ses formations.
-            </p>
+            <p className="text-gray-500 text-sm">Aucune formation trouvée pour cet apprenant.</p>
           )}
           {!loading && !hasSearched && !error && !searchAttemptedWithEmptyInput && (
             <p className="text-gray-500 text-sm">
@@ -391,179 +347,130 @@ const ApprenantFormationTimeline = () => {
         </div>
       </div>
 
-      {/* Section d'affichage des résultats */}
       <div className="space-y-6">
-        {hasSearched && !searchAttemptedWithEmptyInput && (
-          <>
-            {/* Liste des apprenants correspondants si plusieurs résultats */}
-            {getUniqueLearners().length > 1 && (
-              <div className="bg-white rounded-lg shadow p-4 mb-6">
-                <h3 className="font-medium text-gray-800 mb-3">
-                  Apprenants correspondants :
-                </h3>
-                <ul className="space-y-2">
-                  {getUniqueLearners().map((learner) => (
-                    <li 
-                      key={learner.emp_matricule}
-                      className="px-4 py-2 cursor-pointer hover:bg-purple-50 rounded transition"
-                      onClick={() => handleLearnerSelection(
-                        learner.emp_matricule,
-                        learner.emp_name,
-                        learner.emp_firstname
-                      )}
-                    >
-                      <span className="font-medium">{learner.emp_name} {learner.emp_firstname}</span>
-                      <span className="text-gray-500 text-sm block">Matricule: {learner.emp_matricule}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {/* Affichage des formations */}
-            {getUniqueLearners().length === 1 && displayedLearnerFormations.map((formation, index) => {
-              const startDate = new Date(formation.dateDebut);
-              const day = startDate.getDate();
-              const month = formatShortMonth(startDate);
-              const year = startDate.getFullYear();
+        {hasSearched && !searchAttemptedWithEmptyInput && getUniqueLearners().length === 1 &&
+          displayedLearnerFormations.map((formation, index) => {
+            const startDate = new Date(formation.dateDebut);
+            const day = startDate.getDate();
+            const month = formatShortMonth(startDate);
+            const year = startDate.getFullYear();
 
-              return (
-                <div
-                  key={`${formation.emp_matricule}-${formation.idModule}-${index}`}
-                  className="relative w-full flex flex-col sm:flex-row items-start"
-                >
-                  {/* Cercle de date */}
-                  <div className="bg-[#a462a4] text-white rounded-full border-4 border-white p-2 text-center w-14 h-14 flex flex-col justify-center items-center shadow mr-0 sm:mr-4 mb-3 sm:mb-0 z-10">
-                    <p className="text-sm font-bold">{day}</p>
-                    <p className="text-[0.6rem]">
-                      {month} {year}
-                    </p>
+            return (
+              <div
+                key={`${formation.emp_matricule}-${formation.idModule}-${index}`}
+                className="relative w-full flex flex-col sm:flex-row items-start"
+              >
+                <div className="bg-[#a462a4] text-white rounded-full border-4 border-white p-2 text-center w-14 h-14 flex flex-col justify-center items-center shadow mr-0 sm:mr-4 mb-3 sm:mb-0 z-10">
+                  <p className="text-sm font-bold">{day}</p>
+                  <p className="text-[0.6rem]">
+                    {month} {year}
+                  </p>
+                </div>
+
+                <div className="absolute top-0 sm:top-[1.75rem] left-7 sm:left-[1.75rem] w-0.5 bg-gray-300 h-full z-0"></div>
+
+                <div className="flex-1 flex flex-col lg:flex-row bg-white rounded-lg shadow overflow-hidden w-full border border-gray-100">
+                  <div className="w-full lg:w-1/8 bg-gray-100 flex justify-center items-center p-2">
+                    <img
+                      src={formation.imageUrl}
+                      alt={`Formation ${formation.module_name}`}
+                      className="w-full h-40 object-cover rounded-md"
+                      onError={(e) => {
+                        e.target.src = `${DIGITALOCEAN_MODULES_BASE_URL}${DEFAULT_PLACEHOLDER_FILENAME}`;
+                      }}
+                    />
                   </div>
-                  
-                  {/* Ligne verticale de la timeline */}
-                  <div className="absolute top-0 sm:top-[1.75rem] left-7 sm:left-[1.75rem] w-0.5 bg-gray-300 h-full z-0"></div>
 
-                  {/* Carte de formation */}
-                  <div className="flex-1 flex flex-col lg:flex-row bg-white rounded-lg shadow overflow-hidden w-full border border-gray-100">
-                    {/* Image */}
-                    <div className="w-full lg:w-1/8 bg-gray-100 flex justify-center items-center p-2">
-                      <img
-                        src={formation.imageUrl}
-                        alt={`Formation ${formation.module_name}`}
-                        className="w-full h-40 object-cover rounded-md"
-                        onError={(e) => {
-                          e.target.src = `${DIGITALOCEAN_MODULES_BASE_URL}${DEFAULT_PLACEHOLDER_FILENAME}`;
-                        }}
-                      />
-                    </div>
-
-                    {/* Contenu */}
-                    <div className="w-full lg:w-2/3 p-4">
+                  <div className="w-full lg:w-2/3 p-4">
                     <Link
                       to={`/reporting/learnerProjet/${formation.idModule}/${formation.learner_id}`}
                       className="text-base font-semibold text-purple-700 hover:underline line-clamp-1"
                     >
                       {formation.module_name}
                     </Link>
-                      
-                      <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-center text-gray-600">
-                          <span className="mr-1">📅</span>
-                          <span>
-                            {new Date(formation.dateDebut).toLocaleDateString("fr-FR")} -{" "}
-                            {new Date(formation.dateFin).toLocaleDateString("fr-FR")}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <span className="mr-1">📍</span>
-                          <span>
-                            {formation.salle_name}, {formation.salle_quartier}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <span className="mr-1">⏱</span>
-                          <span>
-                            {formation.duration_days} jours | {formation.duration_hours} h
-                          </span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <span className="mr-1">🎖</span>
-                          <span>{formation.level}</span>
-                        </div>
-                      </div>
 
-                      {/* Note et prix */}
-                      <div className="mt-3 flex flex-wrap justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="mr-1">
-                            {renderRating(formation.average_rating)}
-                          </div>
-                          <span className="text-xs text-gray-500">
-                            ({formation.review_count} avis)
-                          </span>
-                        </div>
-                        <span className="text-sm font-medium text-purple-600">
-                          {formation.price_info}
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center text-gray-600">
+                        <span className="mr-1">📅</span>
+                        <span>
+                          {new Date(formation.dateDebut).toLocaleDateString("fr-FR")} -{" "}
+                          {new Date(formation.dateFin).toLocaleDateString("fr-FR")}
                         </span>
                       </div>
+                      <div className="flex items-center text-gray-600">
+                        <span className="mr-1">📍</span>
+                        <span>
+                          {formation.salle_name}, {formation.salle_quartier}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <span className="mr-1">⏱</span>
+                        <span>
+                          {formation.duration_days} jours | {formation.duration_hours} h
+                        </span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <span className="mr-1">🎖</span>
+                        <span>{formation.level}</span>
+                      </div>
+                    </div>
 
-                      {/* Description */}
-                      <p className="mt-3 text-sm text-gray-700 line-clamp-2">
-                        {formation.description}
-                      </p>
+                    <div className="mt-3 flex flex-wrap justify-between items-center">
+                      <div className="flex items-center">
+                        <div className="mr-1">{renderRating(formation.average_rating)}</div>
+                        <span className="text-xs text-gray-500">({formation.review_count} avis)</span>
+                      </div>
+                      <span className="text-sm font-medium text-purple-600">
+                        {formation.price_info}
+                      </span>
+                    </div>
 
-                      {/* Informations apprenant/entreprise */}
-                      <div className="mt-4 pt-3 border-t border-gray-100">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="flex items-center">
-                            <div className="mr-3 bg-purple-100 p-2 rounded-full">
-                              <span className="text-purple-600">👤</span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-800">
-                                {formation.emp_name} {formation.emp_firstname}
-                              </p>
-                              <p className="text-xs text-gray-500">Apprenant</p>
-                            </div>
+                    <p className="mt-3 text-sm text-gray-700 line-clamp-2">{formation.description}</p>
+
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="flex items-center">
+                          <div className="mr-3 bg-purple-100 p-2 rounded-full">
+                            <span className="text-purple-600">👤</span>
                           </div>
-                          <div className="flex items-center">
-                            <div className="mr-3 bg-blue-100 p-2 rounded-full">
-                              <span className="text-blue-600">🏢</span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-800">
-                                {formation.etp_name}
-                              </p>
-                              <p className="text-xs text-gray-500">Entreprise</p>
-                            </div>
+                          <div>
+                            <p className="font-medium text-gray-800">
+                              {formation.emp_name} {formation.emp_firstname}
+                            </p>
+                            <p className="text-xs text-gray-500">Apprenant</p>
                           </div>
                         </div>
+                        <div className="flex items-center">
+                          <div className="mr-3 bg-blue-100 p-2 rounded-full">
+                            <span className="text-blue-600">🏢</span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-800">{formation.etp_name}</p>
+                            <p className="text-xs text-gray-500">Entreprise</p>
+                          </div>
+                        </div>
+                      </div>
 
-                        {/* Informations supplémentaires */}
-                        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                          <div className="bg-gray-50 px-2 py-1 rounded text-center">
-                            <p className="text-gray-500">Projet</p>
-                            <p className="font-medium">{formation.project_status}</p>
-                          </div>
-                          <div className="bg-gray-50 px-2 py-1 rounded text-center">
-                            <p className="text-gray-500">Type</p>
-                            <p className="font-medium">{formation.project_type}</p>
-                          </div>
-                          <div className="bg-gray-50 px-2 py-1 rounded text-center">
-                            <p className="text-gray-500">Présence</p>
-                            <p className="font-medium">
-                              {formation.taux_de_presence}%
-                            </p>
-                          </div>
+                      <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                        <div className="bg-gray-50 px-2 py-1 rounded text-center">
+                          <p className="text-gray-500">Projet</p>
+                          <p className="font-medium">{formation.project_status}</p>
+                        </div>
+                        <div className="bg-gray-50 px-2 py-1 rounded text-center">
+                          <p className="text-gray-500">Type</p>
+                          <p className="font-medium">{formation.project_type}</p>
+                        </div>
+                        <div className="bg-gray-50 px-2 py-1 rounded text-center">
+                          <p className="text-gray-500">Présence</p>
+                          <p className="font-medium">{formation.taux_de_presence}%</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </>
-        )}
+              </div>
+            );
+          })}
       </div>
     </div>
   );

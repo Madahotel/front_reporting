@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { UserContext } from "../../context/UserContext";
 import api from "../../utils/api";
 import { useParams } from "react-router-dom";
-import DownloadProgramButton from './DownloadProgramButton';
+import DownloadProgramButton from "./DownloadProgramButton";
 
 import {
   faMedal,
@@ -23,20 +23,21 @@ import {
   faStar as faEmptyStar,
 } from "@fortawesome/free-regular-svg-icons";
 
-const IMAGE_BASE_URL = "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/";
+const IMAGE_BASE_URL =
+  "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/";
 const MODULE_IMAGE_PATH = "modules/";
 const ENTREPRISE_IMAGE_PATH = "entreprises/";
 
 const formatMontant = (amount, currencyCode = "XOF") => {
-  if (typeof amount !== 'number' && typeof amount !== 'string') {
-    return 'N/A';
+  if (typeof amount !== "number" && typeof amount !== "string") {
+    return "N/A";
   }
   const numericAmount = parseFloat(amount);
   if (isNaN(numericAmount)) {
-    return 'N/A';
+    return "N/A";
   }
-  return new Intl.NumberFormat('fr-MG', {
-    style: 'currency',
+  return new Intl.NumberFormat("fr-MG", {
+    style: "currency",
     currency: currencyCode,
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
@@ -44,10 +45,14 @@ const formatMontant = (amount, currencyCode = "XOF") => {
 };
 
 const StarRating = ({ average }) => {
-  const safeAverage = typeof average === "number" && !isNaN(average) ? average : 0;
+  const safeAverage =
+    typeof average === "number" && !isNaN(average) ? average : 0;
 
   return (
-    <div className="flex items-center" title={`Note: ${safeAverage.toFixed(1)}/5`}>
+    <div
+      className="flex items-center"
+      title={`Note: ${safeAverage.toFixed(1)}/5`}
+    >
       {[...Array(5)].map((_, i) => {
         const starValue = i + 1;
         let iconToUse;
@@ -192,8 +197,8 @@ const SuggestedFormationCard = ({ formation }) => {
               </div>
             </div>
           </div>
-          </div>
-        </a>
+        </div>
+      </a>
     </div>
   );
 };
@@ -425,7 +430,7 @@ const FormationDetail = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-xl shadow-xl overflow-hidden mb-10 border border-gray-200">
           <div className="flex flex-col lg:flex-row">
-            <div className="lg:w-1/2 h-80 md:h-96 relative">
+            <div className="lg:w-1/3 h-52 md:h-100 relative">
               {module.module_image ? (
                 <img
                   src={module.module_image}
@@ -445,6 +450,7 @@ const FormationDetail = () => {
                 </div>
               )}
             </div>
+
             <div className="lg:w-1/2 p-6 md:p-8 flex flex-col justify-center">
               <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 leading-tight">
                 {module.moduleName || "Nom de module inconnu"}

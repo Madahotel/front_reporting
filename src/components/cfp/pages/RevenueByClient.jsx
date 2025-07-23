@@ -392,8 +392,15 @@ const RevenueByClient = () => {
                             {index + 1}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {customer.etp_name}
+                            {customer?.etp_name ? (
+                              customer.etp_name
+                            ) : (
+                              <span className="text-red-500 font-medium italic">
+                                Pas de clients
+                              </span>
+                            )}
                           </td>
+
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                             {customer.count_project || 0}
                           </td>

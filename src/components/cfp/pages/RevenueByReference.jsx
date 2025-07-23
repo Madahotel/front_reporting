@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo,useContext } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import api from "../../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { UserContext } from "../../context/UserContext";
@@ -37,26 +37,26 @@ const RevenueByReference = () => {
     fetchData(selectedYear);
   }, [selectedYear]);
 
-      const { setting } = useContext(UserContext);
-      
-        useEffect(() => {
-          if (!setting) {
-            console.warn("Setting n'est pas encore chargé");
-          } else {
-            console.log("Setting chargé:", setting);
-          }
-        }, [setting]);
-      
-        const currency = setting?.currency_code || "XOF";
-        const [state, setState] = useState({
-          customerInput: "",
-          customerList: [],
-          filteredCustomers: [],
-          selectedCustomer: null,
-          reportingData: null,
-          loading: false,
-          error: null,
-        });
+  const { setting } = useContext(UserContext);
+
+  useEffect(() => {
+    if (!setting) {
+      console.warn("Setting n'est pas encore chargé");
+    } else {
+      console.log("Setting chargé:", setting);
+    }
+  }, [setting]);
+
+  const currency = setting?.currency_code || "XOF";
+  const [state, setState] = useState({
+    customerInput: "",
+    customerList: [],
+    filteredCustomers: [],
+    selectedCustomer: null,
+    reportingData: null,
+    loading: false,
+    error: null,
+  });
 
   const fetchData = async (year) => {
     setLoading(true);
@@ -412,7 +412,7 @@ const RevenueByReference = () => {
                             {reference.count_project || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatMontant(reference.total_ttc,currency)}
+                            {formatMontant(reference.total_ttc, currency)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             {reference.percentage?.toFixed(2) || "0.00"} %
@@ -514,15 +514,23 @@ const RevenueByReference = () => {
                                                 {project.project_reference}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                                                {project.etpName}
+                                                {project.etpName ? (
+                                                  project.etpName
+                                                ) : (
+                                                  <span className="text-red-500 italic">
+                                                    Pas de client
+                                                  </span>
+                                                )}
                                               </td>
+
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-left">
                                                 {project.dateDebut} -{" "}
                                                 {project.dateFin}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                                                 {formatMontant(
-                                                  project.total_ttc,currency
+                                                  project.total_ttc,
+                                                  currency
                                                 )}{" "}
                                               </td>
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
@@ -571,7 +579,7 @@ const RevenueByReference = () => {
                         {data.totalProjects}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
-                        {formatMontant(data.total_price,currency)}
+                        {formatMontant(data.total_price, currency)}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-gray-900 text-right">
                         100 %

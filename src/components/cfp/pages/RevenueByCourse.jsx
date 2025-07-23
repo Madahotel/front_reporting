@@ -495,9 +495,17 @@ const RevenueByCourse = () => {
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                                 {project.project_reference}
                                               </td>
-                                              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                              <td
+                                                className={`px-4 py-2 whitespace-nowrap text-sm ${
+                                                  project.etpName ===
+                                                  "Pas de client"
+                                                    ? "text-red-500 font-semibold"
+                                                    : "text-gray-900"
+                                                }`}
+                                              >
                                                 {project.etpName}
                                               </td>
+
                                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
                                                 {project.dateDebut} -{" "}
                                                 {project.dateFin}

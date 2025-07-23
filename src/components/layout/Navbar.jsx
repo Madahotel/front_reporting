@@ -517,7 +517,7 @@ const Navbar = () => {
                   </li>
 
                   {/* --- DEPLACER "Vos retours" APRES "Chiffre d'affaire" POUR DESKTOP --- */}
-                  {(user?.role_id === 3 ||
+                  {/* {(user?.role_id === 3 ||
                     user?.role_id === 8 ||
                     user?.role_id === 6) && (
                     <li>
@@ -533,7 +533,7 @@ const Navbar = () => {
                         Contactez-nous
                       </Link>
                     </li>
-                  )}
+                  )} */}
                   {/* --- FIN DEPLACEMENT "Vos retours" --- */}
                 </ul>
               ) : (

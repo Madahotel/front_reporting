@@ -11,63 +11,49 @@ const FormationReportEtp = () => {
     label: "Tous les dates",
   });
   const [selectedFormation, setSelectedFormation] = useState("all");
-
-  const [formationData, setFormationData] = useState([]); // Données affichées dans le tableau
-  const [formationsList, setFormationsList] = useState([]); // Liste complète des formations pour le filtre
+  const [formationData, setFormationData] = useState([]);
+  const [formationsList, setFormationsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const [displayDateRange, setDisplayDateRange] = useState("");
   const [displayFormationName, setDisplayFormationName] = useState(
     "Toutes les formations"
   );
-
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const tableBodyRef = useRef(null);
 
-  // Calcule le nombre d'éléments par page en fonction de la hauteur du tableau
   const calculateItemsPerPage = useCallback(() => {
     if (tableBodyRef.current) {
       const tableBodyHeight = tableBodyRef.current.offsetHeight;
-      const rowHeight = 48; // Hauteur estimée d'une ligne de tableau
+      const rowHeight = 48;
       const calculatedItems = Math.max(
         5,
         Math.floor(tableBodyHeight / rowHeight)
       );
       setItemsPerPage(calculatedItems);
     } else {
-      // Fallback si la référence n'est pas encore prête (e.g., au premier rendu)
       const windowHeight = window.innerHeight;
-      const estimatedRows = Math.max(5, Math.floor((windowHeight - 300) / 48)); // 300px pour l'en-tête, filtre, etc.
+      const estimatedRows = Math.max(5, Math.floor((windowHeight - 300) / 48));
       setItemsPerPage(estimatedRows);
     }
   }, []);
 
-  // Met à jour itemsPerPage lors du montage et du redimensionnement de la fenêtre
   useEffect(() => {
     calculateItemsPerPage();
     window.addEventListener("resize", calculateItemsPerPage);
     return () => window.removeEventListener("resize", calculateItemsPerPage);
   }, [calculateItemsPerPage]);
 
-  // Réinitialise la page courante lorsque les données ou les filtres changent
   useEffect(() => {
     setCurrentPage(1);
   }, [formationData, selectedFormation, dateRange]);
 
-  // --- NOUVELLE FONCTION : Récupérer la liste complète des formations pour le filtre ---
   const fetchAllFormationsList = useCallback(async () => {
     try {
-      // L'URL de l'API pour récupérer TOUTES les formations.
-      // Si votre endpoint '/etp/reporting/formation' retourne toutes les formations
-      // sous 'all_etp_formation' ou 'all_cfp_formation', utilisez cette clé.
-      // Sinon, vous devriez créer un endpoint dédié qui retourne { data: [...] }.
       const response = await api.get("/etp/reporting/formation");
-
-      // Vérification du format de réponse : nous nous attendons à 'all_etp_formation' ou 'all_cfp_formation'
       const formations =
-        response.data.all_etp_formation || response.data.all_cfp_formation; // Utiliser la clé correcte
+        response.data.all_etp_formation || response.data.all_cfp_formation;
 
       if (response.status === 200 && Array.isArray(formations)) {
         setFormationsList(formations);
@@ -90,20 +76,18 @@ const FormationReportEtp = () => {
         "Impossible de charger la liste des formations. " +
           (err.response?.data?.message || err.message)
       );
-      setFormationsList([]); // Vider la liste en cas d'erreur
+      setFormationsList([]);
     }
   }, []);
 
-  // Appelle fetchAllFormationsList une seule fois au montage du composant
   useEffect(() => {
     fetchAllFormationsList();
   }, [fetchAllFormationsList]);
 
-  // --- FONCTION MODIFIÉE : Récupérer les données filtrées pour le tableau ---
   const fetchFilteredFormationData = useCallback(
     async (currentDateRange, currentFormation) => {
       setLoading(true);
-      setError(null); // Réinitialise l'erreur avant une nouvelle requête
+      setError(null);
 
       const daterangePayload =
         currentDateRange.range === "all" ||
@@ -121,7 +105,6 @@ const FormationReportEtp = () => {
       };
 
       try {
-        // Cet endpoint est censé retourner { all_learner: [...], data_filter: [...] }
         const response = await api.post(
           "etp/reporting/filterFormation",
           payload
@@ -133,9 +116,8 @@ const FormationReportEtp = () => {
 
         const data = response.data;
 
-        // Vérifie que 'all_learner' est un tableau avant de le définir
         if (Array.isArray(data.all_learner)) {
-          setFormationData(data.all_learner); // Les données pour le tableau
+          setFormationData(data.all_learner);
         } else {
           console.error(
             "Erreur: 'all_learner' n'est pas un tableau dans la réponse filtrée.",
@@ -145,17 +127,14 @@ const FormationReportEtp = () => {
           setError("Format de données de rapport inattendu.");
         }
 
-        // Mise à jour des labels d'affichage en fonction de la réponse API ou des filtres locaux
         if (data.data_filter && data.data_filter.length === 2) {
           setDisplayDateRange(data.data_filter[0]);
           setDisplayFormationName(data.data_filter[1]);
         } else {
           setDisplayDateRange(currentDateRange.label);
-          // Recherche le nom de la formation dans la liste complète des formations (formationsList)
-          // Assurez-vous que formationsList est déjà peuplée ici.
           const foundFormation = formationsList.find(
             (f) => String(f.idModule) === String(currentFormation)
-          ); // Convertir en String pour comparaison sûre
+          );
           setDisplayFormationName(
             currentFormation === "all"
               ? "Toutes les formations"
@@ -171,41 +150,28 @@ const FormationReportEtp = () => {
           "Impossible de charger les données. Veuillez réessayer plus tard. " +
             (err.response?.data?.message || err.message)
         );
-        setFormationData([]); // Vider les données en cas d'erreur
+        setFormationData([]);
       } finally {
         setLoading(false);
       }
     },
     [formationsList]
-  ); // Dépend de formationsList pour que la recherche du nom soit correcte
+  );
 
-  // Appelle fetchFilteredFormationData lorsque les filtres changent
   useEffect(() => {
-    // Appelle la fonction de récupération des données filtrées seulement si la liste des formations est chargée
-    // ou si le filtre est "all" (pour éviter de bloquer l'affichage initial si la liste n'est pas encore là).
-    // La condition `formationsList.length > 0` est importante pour s'assurer que `formationsList` est prête
-    // avant d'essayer de trouver le nom de la formation.
     if (formationsList.length > 0 || selectedFormation === "all") {
       fetchFilteredFormationData(dateRange, selectedFormation);
     }
-  }, [
-    fetchFilteredFormationData,
-    dateRange,
-    selectedFormation,
-    formationsList,
-  ]); // Ajout de formationsList ici
+  }, [fetchFilteredFormationData, dateRange, selectedFormation, formationsList]);
 
-  // Gestionnaire de soumission des filtres
   const handleFilter = useCallback(
     ({ dateRange: newDateRange, formation: newFormation }) => {
       setDateRange(newDateRange);
       setSelectedFormation(newFormation);
-      // fetchFilteredFormationData sera appelé par le useEffect ci-dessus
     },
     []
   );
 
-  // Logique de pagination
   const totalPages = Math.ceil(formationData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -233,7 +199,6 @@ const FormationReportEtp = () => {
       }
     } else {
       pageNumbers.push(1);
-      // Logique pour afficher "..." et les pages autour de la page actuelle
       if (
         currentPage > 2 + Math.floor(maxPagesToShow / 2) &&
         currentPage <= totalPages - Math.floor(maxPagesToShow / 2)
@@ -265,7 +230,7 @@ const FormationReportEtp = () => {
         pageNumbers.push(totalPages);
       }
     }
-    return [...new Set(pageNumbers)]; // Utilise Set pour éliminer les doublons potentiels de '...'
+    return [...new Set(pageNumbers)];
   }, [currentPage, totalPages]);
 
   return (
@@ -275,7 +240,7 @@ const FormationReportEtp = () => {
           <FormationFilter
             onFilter={handleFilter}
             loading={loading}
-            formationsList={formationsList} // Passe la liste complète des formations
+            formationsList={formationsList}
             initialDateRange={dateRange}
             initialSelectedFormation={selectedFormation}
             setDateRange={setDateRange}
@@ -360,7 +325,7 @@ const FormationReportEtp = () => {
                     scope="col"
                     className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Début
+                    Dates
                   </th>
                   <th
                     scope="col"
@@ -442,15 +407,23 @@ const FormationReportEtp = () => {
                           {data.emp_firstname} {data.emp_name}
                         </div>
                       </td>
-                      <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {data.emp_fonction}
-                      </td>
+                      <td className={`text-center px-3 py-2 whitespace-normal text-xs ${data.emp_fonction && data.emp_fonction === 'default_function' ? 'bg-gray-200' : ''}`}>
+  {data.emp_fonction && data.emp_fonction === 'default_function' ? data.emp_fonction : '--'}
+</td>
+
                       <td className="px-5 py-3 text-sm text-gray-900">
                         {data.module_name}
                       </td>
-                      <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {data.project_type}
-                      </td>
+                      <td
+  className={`px-3 py-3 whitespace-nowrap text-sm 
+    ${data.project_type === 'Intra' ? 'text-blue-500' : ''}
+    ${data.project_type === 'Inter' ? 'text-green-500' : ''}
+    ${data.project_type === 'Externe' ? 'text-red-500' : ''}
+  `}
+>
+  {data.project_type}
+</td>
+
                       <td className="px-5 py-3 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 text-xs rounded-full ${
@@ -473,7 +446,7 @@ const FormationReportEtp = () => {
                         {data.etp_name}
                       </td>
                       <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {data.dateDebut}
+                        {data.dateDebut} au {data.dateFin}
                       </td>
                       <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
                         {data.dureeH} H

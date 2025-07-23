@@ -207,8 +207,8 @@ const ProjectReporting = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                               Client
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Type
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Type de projet
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                               Début
@@ -239,11 +239,70 @@ const ProjectReporting = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {index + 1}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {project.client}
+                              <td
+                                className={`px-4 py-2 whitespace-nowrap text-sm ${
+                                  project.client
+                                    ? project.client === "Pas de client"
+                                      ? "text-red-500 font-semibold bg-yellow-100 p-1 rounded"
+                                      : "text-gray-900"
+                                    : "text-red-500 font-semibold"
+                                }`}
+                              >
+                                {project.client ?? "Pas de client"}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {project.type_projet}
+
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span
+                                  className={`px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full 
+                                  ${
+                                    project.type_projet === "Inter"
+                                      ? "bg-purple-100 text-purple-800"
+                                      : project.type_projet === "Intra"
+                                      ? "bg-green-100 text-indigo-800"
+                                      : project.type_projet === "Interne"
+                                      ? "bg-pink-100 text-pink-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}
+                                >
+                                  {project.type_projet ===
+                                    "Inter-entreprise" && (
+                                    <svg
+                                      className="w-3 h-3 mr-1"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+                                    </svg>
+                                  )}
+                                  {project.type_projet ===
+                                    "Intra-entreprise" && (
+                                    <svg
+                                      className="w-3 h-3 mr-1"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  )}
+                                  {project.type_projet === "Sur-mesure" && (
+                                    <svg
+                                      className="w-3 h-3 mr-1"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  )}
+                                  {project.type_projet}
+                                </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {project.date_debut}

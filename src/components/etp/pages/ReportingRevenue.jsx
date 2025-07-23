@@ -1,8 +1,32 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
+import React, { useState, useEffect, useCallback, useContext, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../utils/api";
 import { UserContext } from "../../context/UserContext";
 import { formatMontant } from "../../utils/formatMontant";
+import {
+  Chart as ChartJS,
+  BarElement,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
+import { Bar, Line } from "react-chartjs-2";
+
+// Enregistrer les composants nécessaires de Chart.js
+ChartJS.register(
+  BarElement,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 // Composant de carte métrique optimisé
 const MetricCard = ({
@@ -122,11 +146,24 @@ const WarningIcon = (props) => (
   </svg>
 );
 
+const ChartIcon = (props) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+    />
+  </svg>
+);
+
 const ReportingRevenue = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedYear, setSelectedYear] = useState("current");
+  const [chartType, setChartType] = useState("bar"); // 'bar' or 'line'
+  const chartRef = useRef(null);
 
   const { setting } = useContext(UserContext);
 
@@ -201,6 +238,108 @@ const ReportingRevenue = () => {
           monthly_students: Array(12).fill(0),
           year_title: `${getPreviousYear()}`,
         };
+
+  // Préparation des données pour Chart.js
+  const chartData = {
+    labels: data?.months || [],
+    datasets: [
+      {
+        label: "Données finales",
+        data: displayData.monthly_finished || [],
+        backgroundColor: "rgba(79, 70, 229, 0.7)",
+        borderColor: "rgba(79, 70, 229, 1)",
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        yAxisID: "y",
+      },
+      {
+        label: "Prévisions",
+        data: displayData.monthly_forecast || [],
+        backgroundColor: "rgba(236, 72, 153, 0.5)",
+        borderColor: "rgba(236, 72, 153, 1)",
+        borderWidth: 2,
+        borderDash: [5, 5],
+        tension: 0.4,
+        yAxisID: "y",
+      },
+      {
+        label: "Apprenants",
+        data: displayData.monthly_students || [],
+        backgroundColor: "rgba(16, 185, 129, 0.5)",
+        borderColor: "rgba(16, 185, 129, 1)",
+        borderWidth: 2,
+        type: "line",
+        yAxisID: "y1",
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: "index",
+      intersect: false,
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            let label = context.dataset.label || "";
+            if (label) {
+              label += ": ";
+            }
+            if (context.datasetIndex < 2) {
+              // Pour les deux premiers datasets (finances)
+              label += formatMontant(context.raw, currency);
+            } else {
+              // Pour le dataset des apprenants
+              label += context.raw + " apprenants";
+            }
+            return label;
+          },
+        },
+      },
+      legend: {
+        position: "top",
+        labels: {
+          boxWidth: 12,
+          padding: 20,
+          font: {
+            size: 12,
+          },
+          usePointStyle: true,
+        },
+      },
+    },
+    scales: {
+      y: {
+        type: "linear",
+        display: true,
+        position: "left",
+        title: {
+          display: true,
+          text: "Montant (" + currency + ")",
+        },
+        grid: {
+          drawOnChartArea: true,
+        },
+      },
+      y1: {
+        type: "linear",
+        display: true,
+        position: "right",
+        title: {
+          display: true,
+          text: "Nombre d'apprenants",
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      },
+    },
+  };
 
   if (loading) {
     return (
@@ -387,6 +526,72 @@ const ReportingRevenue = () => {
             </div>
           </motion.div>
 
+          {/* Chart section */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="mb-8"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Visualisation des Performances -{" "}
+                <span className="text-indigo-600">{displayData.year_title}</span>
+              </h2>
+              <div className="flex gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setChartType("bar")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${
+                    chartType === "bar"
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <ChartIcon className="h-4 w-4" />
+                  Barres
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setChartType("line")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${
+                    chartType === "line"
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <ChartIcon className="h-4 w-4" />
+                  Lignes
+                </motion.button>
+              </div>
+            </div>
+
+            <motion.div
+              layout
+              className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm"
+            >
+              <div className="h-80 w-full">
+                {chartType === "bar" ? (
+                  <Bar
+                    ref={chartRef}
+                    data={chartData}
+                    options={chartOptions}
+                    redraw={true}
+                  />
+                ) : (
+                  <Line
+                    ref={chartRef}
+                    data={chartData}
+                    options={chartOptions}
+                    redraw={true}
+                  />
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+
           {/* Monthly table with smooth transitions */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -394,7 +599,7 @@ const ReportingRevenue = () => {
             transition={{ delay: 1.1 }}
           >
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              Performances Mensuelles -{" "}
+              Détails Mensuels -{" "}
               <span className="text-indigo-600">{displayData.year_title}</span>
             </h2>
 

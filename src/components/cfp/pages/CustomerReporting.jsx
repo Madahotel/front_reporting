@@ -1,21 +1,41 @@
-import React, { useState, useEffect, useCallback,useContext  } from "react";
-import PropTypes from "prop-types"; // Keep PropTypes if you intend to use them
-import api from "../../utils/api"; // Assuming this is correctly configured for your API
-import { UserContext } from "../../context/UserContext"; // Assurez-vous que ce chemin est correct
+import React, { useState, useEffect, useCallback, useContext } from "react";
+import PropTypes from "prop-types";
+import api from "../../utils/api";
+import { UserContext } from "../../context/UserContext";
 import { formatMontant } from "../../utils/formatMontant";
+import { Bar } from "react-chartjs-2";
+
+// Importez et enregistrez les composants Chart.js nécessaires
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const CustomerReporting = () => {
   const { setting } = useContext(UserContext);
 
-useEffect(() => {
-  if (!setting) {
-    console.warn("Setting n'est pas encore chargé");
-  } else {
-    console.log("Setting chargé:", setting);
-  }
-}, [setting]);
+  // Styles constants
+  const tableHeaderStyle =
+    "px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider bg-gray-100 border-b border-gray-200";
+  const tableCellStyle =
+    "px-4 py-3 whitespace-nowrap text-sm text-gray-800 border-b border-gray-200";
+  const totalCellStyle =
+    "px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 bg-gray-50 border-b border-gray-200";
 
-const currency = setting?.currency_code || "XOF";
   const [state, setState] = useState({
     customerInput: "",
     customerList: [],
@@ -26,6 +46,9 @@ const currency = setting?.currency_code || "XOF";
     error: null,
   });
 
+  // State pour forcer le re-montage du graphique (résout l'erreur "Canvas is already in use")
+  const [chartKey, setChartKey] = useState(0);
+
   const {
     customerInput,
     customerList,
@@ -35,6 +58,16 @@ const currency = setting?.currency_code || "XOF";
     error,
   } = state;
 
+  const currency = setting?.currency_code || "XOF";
+
+  useEffect(() => {
+    if (!setting) {
+      console.warn("Setting n'est pas encore chargé");
+    } else {
+      console.log("Setting chargé:", setting);
+    }
+  }, [setting]);
+
   // Fetch all customers for the autocomplete list
   useEffect(() => {
     const fetchCustomerList = async () => {
@@ -42,7 +75,6 @@ const currency = setting?.currency_code || "XOF";
         setState((prev) => ({ ...prev, loading: true, error: null }));
         const response = await api.get("/cfp/reporting/client_list");
 
-        // Ensure response.data is an array of objects with customerName and idCustomer
         if (response.data && Array.isArray(response.data)) {
           setState((prev) => ({
             ...prev,
@@ -50,11 +82,7 @@ const currency = setting?.currency_code || "XOF";
             loading: false,
           }));
         } else {
-          // Log the unexpected format for debugging
-          console.error(
-            "API response for client_list is not in the expected array format:",
-            response.data
-          );
+          console.error("API response format unexpected:", response.data);
           throw new Error(
             "Format de réponse invalide pour la liste de clients."
           );
@@ -73,7 +101,7 @@ const currency = setting?.currency_code || "XOF";
     };
 
     fetchCustomerList();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   // Filter customers based on input
   useEffect(() => {
@@ -84,7 +112,7 @@ const currency = setting?.currency_code || "XOF";
 
     const filtered = customerList.filter(
       (customer) =>
-        customer.customerName && // Ensure customerName exists
+        customer.customerName &&
         customer.customerName
           .toLowerCase()
           .includes(customerInput.toLowerCase())
@@ -101,14 +129,13 @@ const currency = setting?.currency_code || "XOF";
           ...prev,
           loading: true,
           error: null,
-          reportingData: null,
+          reportingData: null, // Réinitialiser reportingData avant une nouvelle recherche
         }));
 
         const response = await api.post("/cfp/reporting/search/customer", {
           customer: customerName,
         });
 
-        // Check for success status explicitly if your API returns a `status` field
         if (!response.data || response.data.status !== 200) {
           throw new Error(
             response.data?.message ||
@@ -128,6 +155,8 @@ const currency = setting?.currency_code || "XOF";
           selectedCustomer: foundCustomer,
           loading: false,
         }));
+        // Incrémenter la clé pour forcer le re-montage du graphique Chart.js
+        setChartKey((prevKey) => prevKey + 1);
       } catch (err) {
         console.error("Error fetching reporting data:", err);
         setState((prev) => ({
@@ -141,7 +170,7 @@ const currency = setting?.currency_code || "XOF";
       }
     },
     [customerList]
-  ); // customerList is a dependency because it's used to find the customer
+  );
 
   const handleInputChange = (e) => {
     setState((prev) => ({ ...prev, customerInput: e.target.value }));
@@ -158,25 +187,11 @@ const currency = setting?.currency_code || "XOF";
     setState((prev) => ({
       ...prev,
       customerInput: customer.customerName,
-      filteredCustomers: [], // Clear suggestions after selection
-      // You might want to immediately set selectedCustomer here if needed
+      filteredCustomers: [],
       selectedCustomer: customer,
     }));
     fetchReportingData(customer.customerName);
   };
-
-  // const formatCurrency = (amount) => {
-  //   const numericAmount =
-  //     typeof amount === "string" ? parseFloat(amount) : amount;
-  //   if (isNaN(numericAmount)) return amount;
-
-  //   return new Intl.NumberFormat("fr-MG", {
-  //     style: "currency",
-  //     currency: "MGA",
-  //     minimumFractionDigits: 0,
-  //     maximumFractionDigits: 2,
-  //   }).format(numericAmount);
-  // };
 
   const renderCARows = () => {
     if (
@@ -193,29 +208,45 @@ const currency = setting?.currency_code || "XOF";
       );
     }
 
-    return reportingData.results.ca.map((yearData) => (
-      <tr key={yearData.year} className="hover:bg-gray-50 even:bg-gray-50">
-        <td className="p-3 font-medium">{yearData.year}</td>
-        {Object.values(reportingData.months).map((monthName) => {
-          const monthData = yearData.ca_customer.find(
-            (m) => m.month === monthName
-          );
-          return (
-            <td key={`${yearData.year}-${monthName}`} className="p-3">
-              {monthData
-                ? formatMontant(monthData.total_ttc,currency)
-                : formatMontant(0)}
+    return reportingData.results.ca.map((yearData) => {
+      const annualTotal = yearData.ca_customer.reduce(
+        (sum, month) => sum + Number(month?.total_ttc || 0),
+        0
+      );
+
+      return (
+        <React.Fragment key={yearData.year}>
+          <tr className="hover:bg-gray-50">
+            <td className={tableCellStyle}>{yearData.year}</td>
+            {Object.values(reportingData.months).map((monthName) => {
+              const monthData = yearData.ca_customer.find(
+                (m) => m.month === monthName
+              );
+              return (
+                <td
+                  key={`${yearData.year}-${monthName}`}
+                  className={tableCellStyle}
+                >
+                  {monthData
+                    ? formatMontant(monthData.total_ttc, currency)
+                    : formatMontant(0)}
+                </td>
+              );
+            })}
+            <td className={totalCellStyle}>
+              {formatMontant(annualTotal, currency)}
             </td>
-          );
-        })}
-        <td className="p-3 font-semibold">
-          {yearData.total ? formatMontant(yearData.total,currency) : formatMontant(0)}
-        </td>
-      </tr>
-    ));
+          </tr>
+        </React.Fragment>
+      );
+    });
   };
 
-  const renderMonthlyCountTable = (dataArray, keyToDisplay) => {
+  const renderMonthlyCountTable = (
+    dataArray,
+    keyToDisplay,
+    showAnnualTotal = false
+  ) => {
     if (!reportingData?.months || !dataArray || dataArray.length === 0) {
       return (
         <tr>
@@ -226,23 +257,38 @@ const currency = setting?.currency_code || "XOF";
       );
     }
 
-    return dataArray.map((yearData) => (
-      <tr key={yearData.year} className="hover:bg-gray-50 even:bg-gray-50">
-        <td className="p-3 font-medium">{yearData.year}</td>
-        {Object.values(reportingData.months).map((monthName) => {
-          const monthData = yearData[keyToDisplay].find(
-            (m) => m.month === monthName
-          );
-          return (
-            <td key={`${yearData.year}-${monthName}`} className="p-3">
-              {monthData
-                ? monthData.nb_project || monthData.nb_learner || 0
-                : 0}
-            </td>
-          );
-        })}
-      </tr>
-    ));
+    return dataArray.map((yearData) => {
+      const annualTotal = yearData[keyToDisplay].reduce(
+        (sum, month) => sum + (month?.nb_project || month?.nb_learner || 0),
+        0
+      );
+
+      return (
+        <React.Fragment key={yearData.year}>
+          <tr className="hover:bg-gray-50">
+            <td className={tableCellStyle}>{yearData.year}</td>
+            {Object.values(reportingData.months).map((monthName) => {
+              const monthData = yearData[keyToDisplay].find(
+                (m) => m.month === monthName
+              );
+              return (
+                <td
+                  key={`${yearData.year}-${monthName}`}
+                  className={tableCellStyle}
+                >
+                  {monthData
+                    ? monthData.nb_project || monthData.nb_learner || 0
+                    : 0}
+                </td>
+              );
+            })}
+            {showAnnualTotal && (
+              <td className={totalCellStyle}>{annualTotal}</td>
+            )}
+          </tr>
+        </React.Fragment>
+      );
+    });
   };
 
   const renderSection = (title, content, count = null) => (
@@ -250,7 +296,9 @@ const currency = setting?.currency_code || "XOF";
       <header className="bg-gray-100 px-6 py-4 border-b">
         <h2 className="text-xl font-semibold text-gray-800">
           {title}
-          {count !== null && ` (${count})`}
+          {count !== null && (
+            <span className="ml-2 text-gray-500 font-normal">({count})</span>
+          )}
         </h2>
       </header>
       <div className="p-6">{content}</div>
@@ -258,14 +306,14 @@ const currency = setting?.currency_code || "XOF";
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-25 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          {/* <h1 className="text-2xl font-bold text-gray-800">Historique des Formations</h1> */}
-          <p className="block text-sm font-medium text-gray-700 mb-1">
-            Recherchez un client pour afficher son rapports de formation
-          </p>
-        </div>
-      <div className="relative w-190 mx-auto">
+    <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 mt-13">
+      <div className="text-center mb-8">
+        <p className="block text-sm font-medium text-gray-700 mb-1">
+          Recherchez un client pour afficher son rapports de formation
+        </p>
+      </div>
+
+      <div className="relative w-full mx-auto mb-8">
         <form
           onSubmit={handleFormSubmit}
           className="flex flex-col sm:flex-row gap-4"
@@ -274,7 +322,7 @@ const currency = setting?.currency_code || "XOF";
             <input
               id="customer-search"
               type="text"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
               placeholder="Saisissez le nom d'une entreprise..."
               value={customerInput}
               onChange={handleInputChange}
@@ -298,11 +346,11 @@ const currency = setting?.currency_code || "XOF";
 
           <button
             type="submit"
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200"
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200 flex items-center justify-center min-w-[180px]"
             disabled={loading || !customerInput}
           >
             {loading ? (
-              <span className="flex items-center justify-center">
+              <>
                 <svg
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                   xmlns="http://www.w3.org/2000/svg"
@@ -324,7 +372,7 @@ const currency = setting?.currency_code || "XOF";
                   ></path>
                 </svg>
                 Chargement...
-              </span>
+              </>
             ) : (
               "Générer le rapport"
             )}
@@ -361,6 +409,98 @@ const currency = setting?.currency_code || "XOF";
 
       {reportingData && (
         <div className="space-y-8">
+          {/* Résumé Global */}
+          <section className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <header className="bg-gray-100 px-6 py-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Résumé Global
+              </h2>
+            </header>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                <p className="text-sm text-purple-600 font-medium">Total CA</p>
+                <p className="text-2xl font-bold text-purple-800">
+                  {formatMontant(
+                    reportingData.results.ca.reduce(
+                      (total, year) => total + (year.total || 0),
+                      0
+                    ),
+                    currency
+                  )}
+                </p>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <p className="text-sm text-blue-600 font-medium">
+                  Total Projets
+                </p>
+                <p className="text-2xl font-bold text-blue-800">
+                  {reportingData.total_project || 0}
+                </p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                <p className="text-sm text-green-600 font-medium">
+                  Total Apprenants
+                </p>
+                <p className="text-2xl font-bold text-green-800">
+                  {reportingData.total_learner || 0}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Graphique CA */}
+          {reportingData?.results?.ca &&
+            reportingData.results.ca.length > 0 &&
+            renderSection(
+              "Visualisation du chiffre d'affaires",
+              <div className="h-64">
+                <Bar
+                  // Ajout de la prop key ici. Chaque fois que chartKey change,
+                  // React va détruire l'ancien composant Bar et en monter un nouveau,
+                  // résolvant l'erreur "Canvas is already in use".
+                  key={chartKey}
+                  data={{
+                    labels: Object.values(reportingData.months),
+                    datasets: reportingData.results.ca.map((yearData) => ({
+                      label: yearData.year,
+                      data: Object.values(reportingData.months).map((month) => {
+                        const monthData = yearData.ca_customer.find(
+                          (m) => m.month === month
+                        );
+                        return monthData ? monthData.total_ttc : 0;
+                      }),
+                      backgroundColor:
+                        yearData.year === new Date().getFullYear().toString()
+                          ? "rgba(147, 51, 234, 0.7)"
+                          : "rgba(209, 213, 219, 0.7)",
+                    })),
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        ticks: {
+                          callback: (value) =>
+                            formatMontant(value, currency, true),
+                        },
+                      },
+                    },
+                    plugins: {
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => {
+                            return formatMontant(context.raw, currency);
+                          },
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            )}
+
           {/* Référents Section */}
           {renderSection(
             "Référents",
@@ -368,13 +508,13 @@ const currency = setting?.currency_code || "XOF";
               <ul className="space-y-4">
                 {reportingData.referents.map((referent) => (
                   <li
-                    key={referent.id || referent.email} // Use a unique key
+                    key={referent.id || referent.email}
                     className="p-4 border border-gray-200 rounded-lg"
                   >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <p className="text-sm text-gray-500">Nom</p>
-                        <p className="font-medium">{referent.name || "-"}</p>
+                        <p className="font-medium">{referent.name || "Non renseigné"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Email</p>
@@ -382,7 +522,7 @@ const currency = setting?.currency_code || "XOF";
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Téléphone</p>
-                        <p>{referent.customerPhone || "-"}</p>
+                        <p>{referent.customerPhone || "Non renseigné"}</p>
                       </div>
                     </div>
                   </li>
@@ -396,24 +536,21 @@ const currency = setting?.currency_code || "XOF";
           {/* Évaluation du chiffre d'affaires Section */}
           {renderSection(
             "Évaluation du chiffre d'affaires",
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead>
                   <tr>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Année
-                    </th>
+                    <th className={tableHeaderStyle}>Année</th>
                     {reportingData.months &&
                       Object.values(reportingData.months).map((month) => (
-                        <th
-                          key={month}
-                          className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
+                        <th key={month} className={tableHeaderStyle}>
                           {month}
                         </th>
                       ))}
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Annuel
+                    <th className={`${tableHeaderStyle} bg-yellow-100`}>
+                      <span className="text-red-600 font-semibold">
+                        Total Annuel
+                      </span>
                     </th>
                   </tr>
                 </thead>
@@ -426,139 +563,198 @@ const currency = setting?.currency_code || "XOF";
 
           {/* Nombre de projets Section */}
           {renderSection(
-            "Nombre de projets par mois",
-            <div className="overflow-x-auto">
+            "Nombre de projets",
+            <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead>
                   <tr>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Année
-                    </th>
+                    <th className={tableHeaderStyle}>Année</th>
                     {reportingData.months &&
                       Object.values(reportingData.months).map((month) => (
-                        <th
-                          key={month}
-                          className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
+                        <th key={month} className={tableHeaderStyle}>
                           {month}
                         </th>
                       ))}
+                    <th className={`${tableHeaderStyle} bg-yellow-100`}>
+                      <span className="text-red-600 font-semibold">
+                        Total Annuel
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {renderMonthlyCountTable(
                     reportingData.results.count_projects,
-                    "projects"
+                    "projects",
+                    true
                   )}
                 </tbody>
               </table>
-            </div>,
-            reportingData.total_project || 0
+            </div>
           )}
 
           {/* Nombre d'apprenants Section */}
           {renderSection(
-            "Nombre d'apprenants par mois",
-            <div className="overflow-x-auto">
+            "Nombre d'apprenants",
+            <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead>
                   <tr>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Année
-                    </th>
+                    <th className={tableHeaderStyle}>Année</th>
                     {reportingData.months &&
                       Object.values(reportingData.months).map((month) => (
-                        <th
-                          key={month}
-                          className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
+                        <th key={month} className={tableHeaderStyle}>
                           {month}
                         </th>
                       ))}
+                    <th className={`${tableHeaderStyle} bg-yellow-100`}>
+                      <span className="text-red-600 font-semibold">
+                        Total Annuel
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {renderMonthlyCountTable(
                     reportingData.results.learners,
-                    "learners"
+                    "learners",
+                    true
                   )}
                 </tbody>
               </table>
-            </div>,
-            reportingData.total_learner || 0
+            </div>
           )}
 
-          {/* Historique des projets Section (using story_projects) */}
+          {/* Historique des projets Section */}
           {renderSection(
             "Historique des projets",
             reportingData.results.story_projects?.length > 0 ? (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead>
                     <tr>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Année
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mois
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Projet
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type de Projet
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Coût TTC
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date de Début
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date de Fin
-                      </th>
+                      <th className={tableHeaderStyle}>Année</th>
+                      <th className={tableHeaderStyle}>Mois</th>
+                      <th className={tableHeaderStyle}>Projet</th>
+                      <th className={tableHeaderStyle}>Type de Projet</th>
+                      <th className={tableHeaderStyle}>Coût TTC</th>
+                      <th className={tableHeaderStyle}>Date de Début</th>
+                      <th className={tableHeaderStyle}>Date de Fin</th>
+                      <th className={tableHeaderStyle}>Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {reportingData.results.story_projects.map((yearData) =>
-                      yearData.story_projects.map((monthData) =>
-                        monthData.projects.map((project) => (
-                          <tr
-                            key={project.idProjet}
-                            className="hover:bg-gray-50"
-                          >
-                            <td className="px-3 py-4 whitespace-nowrap">
-                              {yearData.year}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap">
-                              {monthData.month}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap">
-                              {project.module_name}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap">
-                              {project.project_type}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap">
-                              {formatMontant(project.total_ttc,currency)}
-                           
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap">
-                              {project.dateDebut}
-                            </td>
-                            <td className="px-3 py-4 whitespace-nowrap">
-                              {project.dateFin}
-                            </td>
-                          </tr>
-                        ))
-                      )
-                    )}
+                    {(() => {
+                      let totalCost = 0;
+                      const projects = [];
+
+                      reportingData.results.story_projects.forEach(
+                        (yearData) => {
+                          yearData.story_projects.forEach((monthData) => {
+                            monthData.projects.forEach((project) => {
+                              totalCost += parseFloat(project.total_ttc) || 0;
+                              projects.push(
+                                <tr
+                                  key={project.idProjet}
+                                  className="hover:bg-gray-50"
+                                >
+                                  <td className={tableCellStyle}>
+                                    {yearData.year}
+                                  </td>
+                                  <td className={tableCellStyle}>
+                                    {monthData.month}
+                                  </td>
+                                  <td className={tableCellStyle}>
+                                    {project.module_name}
+                                  </td>
+                                  <td className={tableCellStyle}>
+                                    <span
+                                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        project.project_type ===
+                                        "Inter-entreprise"
+                                          ? "bg-purple-100 text-purple-800"
+                                          : project.project_type ===
+                                            "Intra-entreprise"
+                                          ? "bg-blue-100 text-blue-800"
+                                          : "bg-green-100 text-green-800"
+                                      }`}
+                                    >
+                                      {project.project_type}
+                                    </span>
+                                  </td>
+                                  <td className={tableCellStyle}>
+                                    {formatMontant(project.total_ttc, currency)}
+                                  </td>
+                                  <td className={tableCellStyle}>
+                                    {project.dateDebut}
+                                  </td>
+                                  <td className={tableCellStyle}>
+                                    {project.dateFin}
+                                  </td>
+                                  <td className={tableCellStyle}>
+                                    <a
+                                      href={`https://projets.forma-fusion.com/cfp/projets/${project.idProjet}/detail`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-purple-600 hover:text-purple-900"
+                                    >
+                                      <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                        />
+                                      </svg>
+                                    </a>
+                                  </td>
+                                </tr>
+                              );
+                            });
+                          });
+                        }
+                      );
+
+                      return [
+                        ...projects,
+                        <tr key="total" className="bg-gray-50 font-semibold">
+                          <td className={totalCellStyle} colSpan={4}>
+                            Total Général
+                          </td>
+                          <td className={totalCellStyle}>
+                            {formatMontant(totalCost, currency)}
+                          </td>
+                          <td className={totalCellStyle} colSpan={3}></td>
+                        </tr>,
+                      ];
+                    })()}
                   </tbody>
                 </table>
               </div>
             ) : (
               <p className="text-gray-500">Aucun historique de projet trouvé</p>
-            )
+            ),
+            reportingData.results.story_projects?.reduce(
+              (total, year) =>
+                total +
+                year.story_projects.reduce(
+                  (sum, month) => sum + month.projects.length,
+                  0
+                ),
+              0
+            ) || 0
           )}
         </div>
       )}
