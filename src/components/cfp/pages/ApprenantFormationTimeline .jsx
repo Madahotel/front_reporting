@@ -271,7 +271,7 @@ const ApprenantFormationTimeline = () => {
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 disabled={loading}
-                placeholder="Nom de l'apprenant..."
+                placeholder="Saisissez le nom de l'apprenant..."
               />
               {showSuggestions && suggestedLearners.length > 0 && (
                 <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">

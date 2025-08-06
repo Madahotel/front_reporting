@@ -6,7 +6,7 @@ const isLocalhost = window.location.hostname === 'localhost' || window.location.
 const api = axios.create({
   baseURL: isLocalhost
     ? 'http://127.0.0.1:8000/api' // En local
-    : 'https://reportings.forma-fusion.com/api', // En ligne
+    : 'https://reporting.mg.formafusion.io/api', // En ligne
   headers: {
     Accept: 'application/json',
   },

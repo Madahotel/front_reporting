@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import api from "../../utils/api";
-import FormationFilter from "./FormationFilter ";
+import FormationFilter from "./FormationFilter";
 import { format } from "date-fns";
 
 const FormationReport = () => {

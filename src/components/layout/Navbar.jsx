@@ -11,12 +11,12 @@ import { IoMdNotificationsOutline } from "react-icons/io";
 import { FiMenu } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { UserContext } from "../context/UserContext";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // <-- Ajout de useNavigate
 import LogoutConfirmationModal from "./LogoutConfirmationModal";
-// import appLinksData from "./AppLinksData"; // <<< REMOVE THIS LINE
 import { getPhotoUrl, preloadImage } from "../utils/imageUtils";
-import api from "../utils/api"; // Import your API utility
+import api from "../utils/api";
 import HeaderWithBeta from "./HeaderWithBeta";
+import AppLauncherGrid from './AppLauncherGrid';
 
 const PROFILE_BASE_PATH =
   "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/referents/";
@@ -26,6 +26,7 @@ const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
   const { user } = useContext(UserContext);
   const location = useLocation();
+  const navigate = useNavigate(); // <-- Initialisation de useNavigate
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isChiffreDAffaireOpen, setIsChiffreDAffaireOpen] = useState(false);
@@ -35,11 +36,9 @@ const Navbar = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState("");
 
-  // --- NEW STATE FOR APP LAUNCHERS ---
   const [appLaunchers, setAppLaunchers] = useState([]);
   const [loadingAppLaunchers, setLoadingAppLaunchers] = useState(true);
   const [appLaunchersError, setAppLaunchersError] = useState(null);
-  // --- END NEW STATE ---
 
   const mobileMenuRef = useRef(null);
   const chiffreDAffaireRef = useRef(null);
@@ -127,8 +126,8 @@ const Navbar = () => {
   const confirmLogout = useCallback(() => {
     logout();
     setShowLogoutModal(false);
-    window.location.reload();
-  }, [logout]);
+    navigate("/login"); // <-- REMPLACÉ window.location.reload()
+  }, [logout, navigate]); // <-- Ajout de navigate dans les dépendances
 
   const cancelLogout = useCallback(() => {
     setShowLogoutModal(false);
@@ -183,42 +182,39 @@ const Navbar = () => {
       );
     }
   }, [isAuthenticated, user]);
+{/* <AppLinksData/> */}
+  // useEffect(() => {
+  //   const fetchAppLaunchers = async () => {
+  //     setLoadingAppLaunchers(true);
+  //     try {
+  //       const response = await api.get("/app_launcher");
+  //       if (
+  //         response.data.status === "success" &&
+  //         Array.isArray(response.data.data)
+  //       ) {
+  //         const formattedData = response.data.data.map((item) => ({
+  //           name: item.label,
+  //           href: item.link,
+  //           icon: `https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/${item.icone}`,
+  //         }));
+  //         setAppLaunchers(formattedData);
+  //       } else {
+  //         setAppLaunchersError(
+  //           "Invalid API response format for app launchers."
+  //         );
+  //         setAppLaunchers([]);
+  //       }
+  //     } catch (err) {
+  //       console.error("Error fetching app launchers:", err);
+  //       setAppLaunchersError("Failed to load application links.");
+  //       setAppLaunchers([]);
+  //     } finally {
+  //       setLoadingAppLaunchers(false);
+  //     }
+  //   };
 
-  // --- NEW useEffect FOR FETCHING APP LAUNCHERS ---
-  useEffect(() => {
-    const fetchAppLaunchers = async () => {
-      setLoadingAppLaunchers(true); // Always set loading to true when fetching
-      try {
-        const response = await api.get("/app_launcher");
-        if (
-          response.data.status === "success" &&
-          Array.isArray(response.data.data)
-        ) {
-          const formattedData = response.data.data.map((item) => ({
-            name: item.label,
-            href: item.link,
-            icon: `https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/${item.icone}`, // Construct full URL
-          }));
-          setAppLaunchers(formattedData);
-        } else {
-          setAppLaunchersError(
-            "Invalid API response format for app launchers."
-          );
-          setAppLaunchers([]);
-        }
-      } catch (err) {
-        console.error("Error fetching app launchers:", err);
-        setAppLaunchersError("Failed to load application links.");
-        setAppLaunchers([]);
-      } finally {
-        setLoadingAppLaunchers(false);
-      }
-    };
-
-    fetchAppLaunchers();
-  }, []);
-
-  // --- END NEW useEffect ---
+  //   fetchAppLaunchers();
+  // }, []);
 
   const isNavLinkActive = useCallback(
     (path) => {
@@ -226,8 +222,8 @@ const Navbar = () => {
       return path === "/"
         ? currentPath === path
         : currentPath.startsWith(path) &&
-            (currentPath.length === path.length ||
-              currentPath[path.length] === "/");
+          (currentPath.length === path.length ||
+            currentPath[path.length] === "/");
     },
     [location.pathname]
   );
@@ -261,14 +257,14 @@ const Navbar = () => {
       ];
     } else {
       console.log("⛔️ Aucune navigation affichée pour ce rôle");
-      return []; // Return empty as "Vos retours" will be added conditionally in JSX
+      return [];
     }
   }, [user]);
 
   const chiffreDAffaireLinks = useMemo(() => {
     if (!user || (user.role_id !== 3 && user.role_id !== 8)) {
       console.log("🚫 Chiffre d'affaire masqué pour role:", user?.role_id);
-      return []; // Rien si pas 3 ou 8
+      return [];
     }
 
     console.log(
@@ -293,13 +289,13 @@ const Navbar = () => {
         id: 1,
         message: "Votre abonnement expire dans 4 jours.",
         time: "il y a 1 jour",
-        href: "https://reporting.forma-fusion.com/markAsRead/cacffc7d-456d-48aa-94ca-62b4bf99184b",
+        href: "https://reporting.mg.formafusion.io/markAsRead/cacffc7d-456d-48aa-94ca-62b4bf99184b",
       },
       {
         id: 2,
         message: "Votre abonnement expire dans 5 jours.",
         time: "il y a 2 jours",
-        href: "https://reporting.forma-fusion.com/markAsRead/5ff34874-48de-44a8-a0be-ddabdee12cc4",
+        href: "https://reporting.mg.formafusion.io/markAsRead/5ff34874-48de-44a8-a0be-ddabdee12cc4",
       },
     ],
     []
@@ -408,7 +404,6 @@ const Navbar = () => {
                           </div>
                         )}
 
-                        {/* --- DEPLACER "Vos retours" APRES "Chiffre d'affaire" POUR MOBILE --- */}
                         {(user?.role_id === 3 ||
                           user?.role_id === 8 ||
                           user?.role_id === 6) && (
@@ -424,7 +419,6 @@ const Navbar = () => {
                             Vos retours
                           </Link>
                         )}
-                        {/* --- FIN DEPLACEMENT "Vos retours" --- */}
                       </div>
                     </>
                   ) : (
@@ -515,26 +509,6 @@ const Navbar = () => {
                       </ul>
                     )}
                   </li>
-
-                  {/* --- DEPLACER "Vos retours" APRES "Chiffre d'affaire" POUR DESKTOP --- */}
-                  {/* {(user?.role_id === 3 ||
-                    user?.role_id === 8 ||
-                    user?.role_id === 6) && (
-                    <li>
-                      <Link
-                        to="/reporting/feedback"
-                        className={`capitalize px-3 py-2 rounded-t-md text-slate-600 hover:text-slate-500 ${
-                          isNavLinkActive("/reporting/feedback")
-                            ? "bg-purple-500 text-white border-b-2 border-purple-200"
-                            : ""
-                        }`}
-                        onClick={() => closeAllDropdownsExcept()}
-                      >
-                        Contactez-nous
-                      </Link>
-                    </li>
-                  )} */}
-                  {/* --- FIN DEPLACEMENT "Vos retours" --- */}
                 </ul>
               ) : (
                 <div className="flex-grow"></div>
@@ -592,46 +566,10 @@ const Navbar = () => {
                   <FaTh className="w-5 h-5" />
                 </button>
                 {isAppsDropdownOpen && (
-                  <div className="absolute right-0 mt-3 w-96 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-30 p-4">
-                    {loadingAppLaunchers ? (
-                      <div className="flex justify-center items-center h-20">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                        <p className="ml-3 text-gray-700">Chargement...</p>
-                      </div>
-                    ) : appLaunchersError ? (
-                      <div className="text-center text-red-600 p-2">
-                        <p>{appLaunchersError}</p>
-                      </div>
-                    ) : appLaunchers.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-2">
-                        {appLaunchers.map((app) => (
-                          <a
-                            key={app.name}
-                            href={app.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex flex-col items-center p-3 transition-colors rounded-lg hover:bg-gray-50"
-                            onClick={() => closeAllDropdownsExcept()}
-                          >
-                            <div className="w-9 h-9 rounded-full overflow-hidden flex justify-center items-center mb-1 ">
-                              <img
-                                src={app.icon}
-                                alt={`${app.name} Icon`}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <span className="text-sm text-center text-gray-600">
-                              {app.name}
-                            </span>
-                          </a>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center text-gray-500 p-2">
-                        Aucune application disponible.
-                      </div>
-                    )}
-                  </div>
+                <div className="origin-top-right absolute -right-15 mt-3 w-72 sm:w-110 rounded-2xl shadow-xl bg-white  ring-1 ring-black ring-opacity-5 focus:outline-none z-30 p-5 border border-gray-100 dark:border-gray-700">
+                  <AppLauncherGrid />
+                </div>
+
                 )}
               </div>
 
@@ -688,7 +626,6 @@ const Navbar = () => {
                               onClick={() => closeAllDropdownsExcept()}
                             >
                               <i className="fa-solid fa-user-gear text-purple-700"></i>{" "}
-                              {/* Icon for profile management */}
                               Gérer mon profil
                             </Link>
 
@@ -698,7 +635,6 @@ const Navbar = () => {
                               aria-label="Déconnexion"
                             >
                               <i className="fa-solid fa-right-from-bracket text-red-500"></i>{" "}
-                              {/* Icon for logout */}
                               Se déconnecter
                             </button>
                           </div>

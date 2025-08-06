@@ -1,34 +1,53 @@
-import React, { useState, useEffect } from "react";
-import api from "../../utils/api"; // Assuming this path is correct
+import React, { useState, useEffect, useMemo } from "react";
+import api from "../../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
-import ExportButtons from "../../boutons/ExportButtons "; // Assuming this path is correct
+import ExportButtons from "../../boutons/ExportButtons ";
+import Select from "react-select";
+import makeAnimated from "react-select/animated";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFilter,
+  faTimes,
+  faSort,
+  faSortUp,
+  faSortDown,
+} from "@fortawesome/free-solid-svg-icons";
+
+const animatedComponents = makeAnimated();
 
 const ReportingEmploye = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // For data fetching errors
-  const [exportError, setExportError] = useState(null); // For export errors
+  const [error, setError] = useState(null);
+  const [exportError, setExportError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState("asc");
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // You can adjust this value
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  // Renommé de selectedFunctions à selectedFullNames
+  const [selectedFullNames, setSelectedFullNames] = useState([]); // For emp_name + emp_firstname
+  const [selectedProjectTypes, setSelectedProjectTypes] = useState([]); // For project_type
+  const [selectedProjectStatuses, setSelectedProjectStatuses] = useState([]); // For project_status
 
   // Fetch data on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await api.get("etp/reporting/apprenant"); // Assuming this endpoint fetches the initial data
+        const response = await api.get("etp/reporting/apprenant");
 
         if (response.data && Array.isArray(response.data.all_learner)) {
           setData(response.data.all_learner);
         } else {
           setData([]);
         }
-        setError(null); // Clear any previous data fetching errors
+        setError(null);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Erreur lors du chargement des données. Veuillez réessayer.");
@@ -40,10 +59,10 @@ const ReportingEmploye = () => {
     fetchData();
   }, []);
 
-  // Reset current page to 1 whenever search term or sort changes
+  // Reset current page to 1 whenever search term or sort/filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, sortColumn, sortDirection]);
+  }, [searchTerm, sortColumn, sortDirection, selectedFullNames, selectedProjectTypes, selectedProjectStatuses]);
 
   // Handle search input change
   const handleSearchChange = (event) => {
@@ -60,47 +79,130 @@ const ReportingEmploye = () => {
     }
   };
 
-  // Sort the data based on the selected column and direction
-  const sortedData = [...data].sort((a, b) => {
-    if (!sortColumn) return 0;
-
-    const aValue = a[sortColumn];
-    const bValue = b[sortColumn];
-
-    // Handle string comparison
-    if (typeof aValue === "string" && typeof bValue === "string") {
-      return sortDirection === "asc"
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
+  // Get the sort indicator (arrow up/down) for table headers
+  const getSortIndicator = (column) => {
+    if (sortColumn === column) {
+      return sortDirection === "asc" ? (
+        <FontAwesomeIcon icon={faSortUp} className="ml-1 text-blue-500" />
+      ) : (
+        <FontAwesomeIcon icon={faSortDown} className="ml-1 text-blue-500" />
+      );
     }
-    // Handle number comparison
-    if (typeof aValue === "number" && typeof bValue === "number") {
-      return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+    return <FontAwesomeIcon icon={faSort} className="ml-1 text-gray-400" />;
+  };
+
+  // Options for filters - Now for Full Names
+  const fullNameOptions = useMemo(() => {
+    const uniqueFullNames = new Set();
+    data.forEach((item) => {
+      if (item.emp_name || item.emp_firstname) {
+        const fullName = `${item.emp_name || ''} ${item.emp_firstname || ''}`.trim();
+        if (fullName) {
+          uniqueFullNames.add(fullName);
+        }
+      }
+    });
+    return Array.from(uniqueFullNames).map((name) => ({
+      value: name,
+      label: name,
+    }));
+  }, [data]);
+
+  const projectTypeOptions = useMemo(() => {
+    const uniqueTypes = new Set();
+    data.forEach((item) => {
+      if (item.project_type) {
+        uniqueTypes.add(item.project_type);
+      }
+    });
+    return Array.from(uniqueTypes).map((type) => ({
+      value: type,
+      label: type,
+    }));
+  }, [data]);
+
+  const projectStatusOptions = useMemo(() => {
+    const uniqueStatuses = new Set();
+    data.forEach((item) => {
+      if (item.project_status) {
+        uniqueStatuses.add(item.project_status);
+      }
+    });
+    return Array.from(uniqueStatuses).map((status) => ({
+      value: status,
+      label: status,
+    }));
+  }, [data]);
+
+  // Filter and Sort the data
+  const filteredAndSortedData = useMemo(() => {
+    let currentFilteredData = [...data];
+
+    // Apply search term filter
+    if (searchTerm) {
+      const lowerCaseSearchTerm = searchTerm.toLowerCase();
+      currentFilteredData = currentFilteredData.filter(
+        (item) =>
+          (item.emp_name &&
+            item.emp_name.toLowerCase().includes(lowerCaseSearchTerm)) ||
+          (item.emp_firstname &&
+            item.emp_firstname.toLowerCase().includes(lowerCaseSearchTerm)) ||
+          (item.module_name &&
+            item.module_name.toLowerCase().includes(lowerCaseSearchTerm)) ||
+          (item.emp_matricule &&
+            item.emp_matricule.toString().includes(lowerCaseSearchTerm))
+      );
     }
 
-    // Handle null/undefined values for sorting (push them to the end or beginning)
-    if (aValue === null || aValue === undefined)
-      return sortDirection === "asc" ? 1 : -1;
-    if (bValue === null || bValue === undefined)
-      return sortDirection === "asc" ? -1 : 1;
+    // Apply full name filter
+    if (selectedFullNames.length > 0) {
+      const values = selectedFullNames.map((f) => f.value);
+      currentFilteredData = currentFilteredData.filter((item) => {
+        const fullName = `${item.emp_name || ''} ${item.emp_firstname || ''}`.trim();
+        return fullName && values.includes(fullName);
+      });
+    }
 
-    return 0; // No specific sorting for other types
-  });
+    // Apply project type filter
+    if (selectedProjectTypes.length > 0) {
+      const values = selectedProjectTypes.map((t) => t.value);
+      currentFilteredData = currentFilteredData.filter((item) =>
+        item.project_type && values.includes(item.project_type)
+      );
+    }
 
-  // Filter the sorted data based on the search term
-  const filteredAndSortedData = sortedData.filter((item) => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return (
-      (item.emp_name &&
-        item.emp_name.toLowerCase().includes(lowerCaseSearchTerm)) ||
-      (item.emp_firstname &&
-        item.emp_firstname.toLowerCase().includes(lowerCaseSearchTerm)) ||
-      (item.module_name &&
-        item.module_name.toLowerCase().includes(lowerCaseSearchTerm)) ||
-      (item.emp_matricule &&
-        item.emp_matricule.toString().includes(lowerCaseSearchTerm))
-    );
-  });
+    // Apply project status filter
+    if (selectedProjectStatuses.length > 0) {
+      const values = selectedProjectStatuses.map((s) => s.value);
+      currentFilteredData = currentFilteredData.filter((item) =>
+        item.project_status && values.includes(item.project_status)
+      );
+    }
+
+    // Apply sorting
+    if (sortColumn) {
+      currentFilteredData.sort((a, b) => {
+        const aValue = a[sortColumn];
+        const bValue = b[sortColumn];
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortDirection === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+        if (typeof aValue === "number" && typeof bValue === "number") {
+          return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+        }
+
+        if (aValue === null || aValue === undefined) return sortDirection === "asc" ? 1 : -1;
+        if (bValue === null || bValue === undefined) return sortDirection === "asc" ? -1 : 1;
+
+        return 0;
+      });
+    }
+
+    return currentFilteredData;
+  }, [data, searchTerm, selectedFullNames, selectedProjectTypes, selectedProjectStatuses, sortColumn, sortDirection]);
 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -126,17 +228,25 @@ const ReportingEmploye = () => {
     }
   };
 
-  // Get the sort indicator (arrow up/down) for table headers
-  const getSortIndicator = (column) => {
-    if (sortColumn === column) {
-      return sortDirection === "asc" ? (
-        <i className="ml-1 fa-solid fa-arrow-up text-blue-500"></i>
-      ) : (
-        <i className="ml-1 fa-solid fa-arrow-down text-blue-500"></i>
-      );
-    }
-    return null;
+  const resetAllFilters = () => {
+    setSearchTerm("");
+    setSelectedFullNames([]); // Réinitialise le filtre par nom complet
+    setSelectedProjectTypes([]);
+    setSelectedProjectStatuses([]);
+    setSortColumn(null);
+    setSortDirection("asc");
+    setCurrentPage(1);
   };
+
+  // Count active filters (excluding search term as it's always visible)
+  const activeFiltersCount = [
+    selectedFullNames.length, // Maintenant basé sur selectedFullNames
+    selectedProjectTypes.length,
+    selectedProjectStatuses.length,
+  ].reduce((acc, count) => acc + (count > 0 ? 1 : 0), 0);
+  // Add 1 if search term is active
+  const totalActiveFilters = activeFiltersCount + (searchTerm ? 1 : 0);
+
 
   // CSS classes for table headers and cells
   const headerClass =
@@ -163,11 +273,11 @@ const ReportingEmploye = () => {
   }
 
   return (
-    <div className="flex flex-col w-full px-4 mx-auto gap-y-4 max-w-full items-center">
-      <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4 p-20">
+    <div className="flex flex-col w-full px-4 mx-auto gap-y-4 max-w-full items-center mt-20">
+      <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4 p-4 bg-white rounded-xl shadow-lg z-20 sticky top-4">
         {/* Search Input Form */}
-        <form className="w-full md:w-auto" onSubmit={(e) => e.preventDefault()}>
-          <label className="input input-bordered w-full md:w-[28rem] flex items-center gap-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-200">
+        <form className="w-full md:w-auto flex-grow" onSubmit={(e) => e.preventDefault()}>
+          <label className="input input-bordered w-full flex items-center gap-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-200 rounded-lg">
             <input
               className="grow px-2 py-1 outline-none"
               type="text"
@@ -190,18 +300,125 @@ const ReportingEmploye = () => {
           </label>
         </form>
 
-        {/* Export Buttons */}
-        <div className="flex flex-wrap justify-center gap-2 my-5 w-fit">
+        <div className="flex flex-wrap justify-end items-center gap-2 w-full md:w-auto">
+          {/* Filter Toggle Button */}
+          <motion.button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+              showFilters
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <FontAwesomeIcon icon={faFilter} />
+            <span>Filtres</span>
+            {totalActiveFilters > 0 && (
+              <AnimatePresence>
+                <motion.span
+                  className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                >
+                  {totalActiveFilters}
+                </motion.span>
+              </AnimatePresence>
+            )}
+          </motion.button>
+
+          {/* Reset Filters Button */}
+          {totalActiveFilters > 0 && (
+            <motion.button
+              onClick={resetAllFilters}
+              className="flex items-center gap-2 px-4 py-2 text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <FontAwesomeIcon icon={faTimes} />
+              <span>Réinitialiser</span>
+            </motion.button>
+          )}
+
+          {/* Export Buttons */}
           <ExportButtons
             xlEndpoint="/etp/reporting/exportXl/app"
             pdfEndpoint="/etp/reporting/exportPdf/app"
             xlFileName="FormationETP.xlsx"
             pdfFileName="reportingformationETP.pdf"
-            data={filteredAndSortedData} // Pass the filtered and sorted data for export
-            onError={setExportError} // Pass the error setter to ExportButtons
+            data={filteredAndSortedData}
+            onError={setExportError}
           />
         </div>
       </div>
+
+      {/* Filter Options Section */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="w-full bg-white rounded-xl shadow-lg p-6 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 z-10"
+          >
+            {/* Filter by Nom Complet */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nom Complet
+              </label>
+              <Select
+                isMulti
+                options={fullNameOptions} // Utilise les options de nom complet
+                value={selectedFullNames} // Utilise l'état pour les noms complets
+                onChange={setSelectedFullNames} // Met à jour l'état des noms complets
+                placeholder="Sélectionner noms..."
+                components={animatedComponents}
+                className="text-sm"
+                classNamePrefix="select"
+                styles={{ menu: (provided) => ({ ...provided, zIndex: 9999 }) }}
+              />
+            </div>
+
+            {/* Filter by Type de Projet */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Type de Projet
+              </label>
+              <Select
+                isMulti
+                options={projectTypeOptions}
+                value={selectedProjectTypes}
+                onChange={setSelectedProjectTypes}
+                placeholder="Sélectionner types..."
+                components={animatedComponents}
+                className="text-sm"
+                classNamePrefix="select"
+                styles={{ menu: (provided) => ({ ...provided, zIndex: 9999 }) }}
+              />
+            </div>
+
+            {/* Filter by Statut du Projet */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Statut du Projet
+              </label>
+              <Select
+                isMulti
+                options={projectStatusOptions}
+                value={selectedProjectStatuses}
+                onChange={setSelectedProjectStatuses}
+                placeholder="Sélectionner statuts..."
+                components={animatedComponents}
+                className="text-sm"
+                classNamePrefix="select"
+                styles={{ menu: (provided) => ({ ...provided, zIndex: 9999 }) }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Export Error Message Display */}
       {exportError && (
@@ -209,7 +426,7 @@ const ReportingEmploye = () => {
       )}
 
       {/* Data Table */}
-      <div className="w-full overflow-x-auto max-w-full bg-white rounded-md shadow-lg -mt-20">
+      <div className="w-full overflow-x-auto max-w-full bg-white rounded-md shadow-lg">
         <table className="min-w-[1200px] w-full table-auto text-left border-collapse">
           <thead className="bg-gray-50">
             <tr>
@@ -288,7 +505,7 @@ const ReportingEmploye = () => {
               {currentItems.length > 0 ? (
                 currentItems.map((item, index) => (
                   <motion.tr
-                    key={item.id || index} // Use item.id if available, fallback to index
+                    key={item.id || index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
@@ -311,7 +528,7 @@ const ReportingEmploye = () => {
                       {item.emp_fonction &&
                       item.emp_fonction === "default_function"
                         ? item.emp_fonction
-                        : "--"}
+                        : "Non défini"}
                     </td>
                     <td className={cellClass}>{item.module_name}</td>
 
@@ -376,7 +593,6 @@ const ReportingEmploye = () => {
       {/* Pagination Controls */}
       {filteredAndSortedData.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-4 mb-8">
-          {/* Previous Button */}
           <button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
@@ -384,8 +600,9 @@ const ReportingEmploye = () => {
           >
             Précédent
           </button>
-
-          {/* Next Button */}
+          <span className="text-sm text-gray-700">
+            Page {currentPage} sur {totalPages}
+          </span>
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}

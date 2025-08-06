@@ -107,6 +107,6 @@ export const applications = [
   {
     label: "Reporting",
     icone: `${import.meta.env.BASE_URL}img/icones/Reporting.png`,
-    link: "https://reporting.forma-fusion.com/reporting/formation"
+    link: "https://reporting.mg.formafusion.io/reporting/formation"
   }
 ];

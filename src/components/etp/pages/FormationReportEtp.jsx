@@ -162,7 +162,12 @@ const FormationReportEtp = () => {
     if (formationsList.length > 0 || selectedFormation === "all") {
       fetchFilteredFormationData(dateRange, selectedFormation);
     }
-  }, [fetchFilteredFormationData, dateRange, selectedFormation, formationsList]);
+  }, [
+    fetchFilteredFormationData,
+    dateRange,
+    selectedFormation,
+    formationsList,
+  ]);
 
   const handleFilter = useCallback(
     ({ dateRange: newDateRange, formation: newFormation }) => {
@@ -407,22 +412,32 @@ const FormationReportEtp = () => {
                           {data.emp_firstname} {data.emp_name}
                         </div>
                       </td>
-                      <td className={`text-center px-3 py-2 whitespace-normal text-xs ${data.emp_fonction && data.emp_fonction === 'default_function' ? 'bg-gray-200' : ''}`}>
-  {data.emp_fonction && data.emp_fonction === 'default_function' ? data.emp_fonction : '--'}
-</td>
+                      <td
+                        className={`text-center px-3 py-2 whitespace-normal text-xs ${
+                          data.emp_fonction &&
+                          data.emp_fonction === "default_function"
+                            ? "bg-gray-200"
+                            : ""
+                        }`}
+                      >
+                        {data.emp_fonction &&
+                        data.emp_fonction === "default_function"
+                          ? data.emp_fonction
+                          : "Non défini"}
+                      </td>
 
                       <td className="px-5 py-3 text-sm text-gray-900">
                         {data.module_name}
                       </td>
                       <td
-  className={`px-3 py-3 whitespace-nowrap text-sm 
-    ${data.project_type === 'Intra' ? 'text-blue-500' : ''}
-    ${data.project_type === 'Inter' ? 'text-green-500' : ''}
-    ${data.project_type === 'Externe' ? 'text-red-500' : ''}
-  `}
->
-  {data.project_type}
-</td>
+                        className={`px-3 py-3 whitespace-nowrap text-sm 
+                          ${data.project_type === "Intra" ? "text-blue-500" : ""}
+                          ${data.project_type === "Inter" ? "text-green-500" : ""}
+                          ${data.project_type === "Externe" ? "text-red-500" : ""}
+                        `}
+                      >
+                        {data.project_type}
+                      </td>
 
                       <td className="px-5 py-3 whitespace-nowrap">
                         <span
