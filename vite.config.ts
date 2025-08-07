@@ -12,7 +12,7 @@ export default defineConfig({
     outDir: '../back_reporting/public/react',
     emptyOutDir: true,
   },
-  //  base: '/react/', 
+   base: '/react/', 
   resolve: {
     alias: {
       hooks: path.resolve(__dirname, './src/hooks'),

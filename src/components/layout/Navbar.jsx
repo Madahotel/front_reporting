@@ -17,6 +17,7 @@ import { getPhotoUrl, preloadImage } from "../utils/imageUtils";
 import api from "../utils/api";
 import HeaderWithBeta from "./HeaderWithBeta";
 import AppLauncherGrid from './AppLauncherGrid';
+import UserFlag from "./UserFlag";
 
 const PROFILE_BASE_PATH =
   "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/referents/";
@@ -515,8 +516,10 @@ const Navbar = () => {
               )}
             </div>
             <div className="flex items-center space-x-4">
+              
               {isAuthenticated && (
                 <div className="relative" ref={notificationsRef}>
+                  <UserFlag/>
                   <button
                     onClick={toggleNotifications}
                     title="Notifications"
@@ -557,6 +560,8 @@ const Navbar = () => {
                   )}
                 </div>
               )}
+
+              
               <div className="relative" ref={appsDropdownRef}>
                 <button
                   onClick={toggleAppsDropdown}
@@ -619,7 +624,7 @@ const Navbar = () => {
                           <div className="w-10"></div>
                           <div className="flex flex-col w-full gap-1">
                             <Link
-                              to="https://profils.forma-fusion.com/cfp/profils"
+                              to="http://compte.mg.formafusion.io/"
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center gap-2 px-2 py-1 text-base text-gray-800 transition duration-100 rounded-md hover:bg-gray-100 hover:text-gray-700"
